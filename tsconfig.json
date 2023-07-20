@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "typeRoots": ["src/@types", "node_modules/@types"],
+    "target": "es5",
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "module": "commonjs",
+    "strict": true,
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "extends": "@tsconfig/node18/tsconfig.json"
+}
