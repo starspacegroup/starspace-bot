@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
+    "dev": "tsx ./src/camera-on.ts",
     "start": "node -r dotenv/config dist/camera-on.js"
   },
   "author": "davis9001",
@@ -14,10 +15,12 @@
     "@tsconfig/node18": "^18.2.0",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
+    "firebase": "^10.1.0",
     "tsconfig": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
+    "tsx": "^3.12.7",
     "typescript": "^5.1.6"
   }
 }
