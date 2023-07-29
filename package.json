@@ -12,10 +12,12 @@
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
+    "@hokify/agenda": "^6.3.0",
     "@tsconfig/node18": "^18.2.0",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
     "firebase": "^10.1.0",
+    "mongodb": "^5.7.0",
     "tsconfig": "^7.0.0"
   },
   "devDependencies": {
