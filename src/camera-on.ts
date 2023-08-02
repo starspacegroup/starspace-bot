@@ -24,7 +24,7 @@ const client = new Client({
 
 client.on("voiceStateUpdate", voiceStateEvent)
 
-global.botID = client.user?.id
+// global.botID = client.user?.id
 // Load commands from commands folders
 // client.commands = new Collection()
 // const foldersPath = path.join(__dirname, "commands")
