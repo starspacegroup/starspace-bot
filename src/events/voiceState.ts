@@ -1,4 +1,14 @@
-import { Events, Client, GatewayIntentBits, VoiceState } from "discord.js"
+import { getJoinTime } from "../connections/mongoDb"
+import TimeSetting from "../models/timeSetting"
+
+import {
+  Events,
+  Client,
+  GatewayIntentBits,
+  VoiceState,
+  Channel,
+  VoiceBasedChannel,
+} from "discord.js"
 import {
   getVoiceConnection,
   joinVoiceChannel,
@@ -6,13 +16,13 @@ import {
   createAudioResource,
   AudioPlayerStatus,
 } from "@discordjs/voice"
+import { checkPrimeSync } from "crypto"
 
 const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
-global.cameraCountdowns = []
-global.retryIntervals = []
-global.cameraOffenders = {}
-global.cameraWarningDelay = 5 // In seconds
-global.cameraKickDelay = 5 // In seconds
+
+// Get join time from mongo
+// global.cameraWarningDelay = getJoinTime() // In seconds
+// global.cameraKickDelay = 5 // In seconds
 
 // client.on("voiceStateUpdate", async (oldState, newState) => {
 //   if (!newState.channel) {
@@ -20,132 +30,102 @@ global.cameraKickDelay = 5 // In seconds
 //   }
 // })
 
-export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
-  if (!newState.channel) {
-    if (newState.channel != oldState.channel) {
-      console.log(`Voice channel activity: ${newState.member?.nickname}.`)
-    }
-    if (newState.channel != "None") {
-      if (newState.selfVideo) {
-        console.log(`${newState.member?.user.tag} camera enabled.`)
-      } else {
-        console.log(`${newState.member?.user.tag} camera disabled.`)
+const memberMoved = (member, oldState, newState) => {
+  const oldChannel = oldState.channel
+  const newChannel = newState.channel
+  if (oldState.channel !== newState.channel) {
+    if (member) {
+      if (oldChannel && newChannel) {
+        return true
       }
     }
   }
 }
 
-// module.exports = {
-//   name: "voiceStateUpdate",
-//   once: false,
-//   execute(oldState, newState) {
-//     console.log(`Voice State Updated!`)
-//     const member = newState.member
-//     const memberID = member.user.id
-//     if (memberID === global.botID) return
-//     const oldChannel = oldState.channel?.name || "None"
-//     const newChannel = newState.channel?.name || "None"
-//     // Check if a member joins or leaves a voice channel
-//     if (oldState.channel !== newState.channel) {
-//       if (member) {
-//         const userName = member.user.tag
+const memberJoined = (member, oldState, newState) => {
+  const oldChannel = oldState.channel
+  const newChannel = newState.channel
+  if (oldState.channel !== newState.channel) {
+    if (member) {
+      if (!oldChannel && newChannel) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
-//         if (oldChannel === "None") {
-//           console.log(`${userName} joined voice channel ${newChannel}.`)
-//         } else if (newChannel === "None") {
-//           console.log(`${userName} left voice channel ${oldChannel}.`)
-//           clearTimeout(global.cameraCountdowns[memberID])
-//         } else {
-//           console.log(`${userName} moved from ${oldChannel} to ${newChannel}.`)
-//           clearTimeout(global.cameraCountdowns[memberID])
-//         }
-//       }
-//     }
+const memberLeft = (member, oldState, newState) => {
+  const oldChannel = oldState.channel
+  const newChannel = newState.channel
+  if (oldState.channel !== newState.channel) {
+    if (member) {
+      if (oldChannel && !newChannel) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
-//     // If a member enables or disables camera
-//     if (newChannel !== "None") {
-//       if (newState.selfVideo) {
-//         console.log(`${newState.member.user.tag} camera enabled.`)
-//         clearTimeout(global.cameraCountdowns[memberID])
-//       } else if (!newState.selfVideo) {
-//         console.log(`${newState.member.user.tag} camera disabled.`)
-//         // Join a voice channel in 5 seconds,
-//         // if the user has not enabled camera
-//         // If the camera is still not enabled in 5 seconds,
-//         // then disconnect user from voice chat
-//         global.cameraCountdowns[memberID] = setTimeout(() => {
-//           // Bot joins channel playing audio
-//           console.log(
-//             `User has not enabled camera in ${global.cameraWarningDelay} seconds.`
-//           )
-//           if (
-//             global.voiceConnection &&
-//             global.voiceConnection._state.status !== "destroyed"
-//           ) {
-//             console.log(
-//               "Bot is already busy, set an interval to deal with this."
-//             )
-//             if (!global.retryIntervals[memberID]) {
-//               global.retryIntervals[memberID] = setInterval(() => {
-//                 retryHandler(member)
-//               }, 5000)
-//             }
-//             return
-//           }
-//           // global.voiceConnection = joinAndPlaySound(newState.channel)
-//           global.cameraCountdowns[memberID] = setTimeout(() => {
-//             // Bot disconnects user from voice chat
-//             // Bot will leave voice chat if no all other users have cam on
-//             console.log(
-//               `User has not enabled camera for another ${global.cameraKickDelay} seconds.`
-//             )
-//             // leaveVoiceChannel(member)
-//             // member.voice.disconnect()
-//           }, global.cameraKickDelay * 1000)
-//         }, global.cameraWarningDelay * 1000)
-//       }
-//     }
-//   },
-// }
+const cameraDisabled = (member, oldState, newState) => {
+  const oldChannel = oldState.channel
+  const newChannel = newState.channel
+  const oldCamState = oldState.selfVideo ? "on" : "off"
+  const newCamState = newState.selfVideo ? "on" : "off"
+  if (oldState.channel == newState.channel) {
+    if (newChannel && member && oldCamState !== newCamState) {
+      if (!newState.selfVideo) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
-// const retryHandler = (member) => {
-//   if (global.retryIntervals[member.user.id]) {
-//     clearInterval(global.retryIntervals[member.user.id])
-//     delete global.retryIntervals[member.user.id]
-//   }
-// }
+const cameraEnabled = (member, oldState, newState) => {
+  const oldChannel = oldState.channel
+  const newChannel = newState.channel
+  const oldCamState = oldState.selfVideo ? "on" : "off"
+  const newCamState = newState.selfVideo ? "on" : "off"
+  if (oldState.channel == newState.channel) {
+    if (newChannel && member && oldCamState !== newCamState) {
+      if (newState.selfVideo) {
+        return true
+      }
+    }
+  }
+  return false
+}
 
-// const joinAndPlaySound = (voiceChannel) => {
-//   try {
-//     const connection = joinVoiceChannel({
-//       channelId: voiceChannel.id,
-//       guildId: voiceChannel.guild.id,
-//       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-//     })
+export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
+  const member = newState.member
+  const userName = member?.user.tag
+  const oldChannel = oldState.channel
+  const newChannel = newState.channel
+  const oldCamState = oldState.selfVideo ? "on" : "off"
+  const newCamState = newState.selfVideo ? "on" : "off"
+  const bot = newState.client
 
-//     // const audioPath = 'path/to/your/audio/file.mp3'; // Replace this with the path to your audio file
-//     // const stream = createReadStream(audioPath);
-//     // const resource = createAudioResource(stream);
-//     // audioPlayer.play(resource);
-//     // connection.subscribe(audioPlayer);
+  if (memberJoined(member, oldState, newState)) {
+    console.log(`${userName} joined voice channel ${newState.channel?.name}.`)
+  }
 
-//     // audioPlayer.on(AudioPlayerStatus.Idle, () => {
-//     //   connection?.destroy();
-//     //   connection = null;
-//     //   console.log('Finished playing audio.');
-//     // });
+  if (memberLeft(member, oldState, newState)) {
+    console.log(`${userName} left voice channel ${newState.channel?.name}.`)
+  }
 
-//     console.log(
-//       `Bot joined voice channel ${voiceChannel.name} and is now playing audio.`
-//     )
-//     return connection
-//   } catch (error) {
-//     console.error("Error joining or playing audio:", error)
-//   }
-// }
+  if (memberMoved(member, oldState, newState)) {
+    console.log(
+      `${userName} moved from voice channel ${oldState.channel?.name} to ${newState.channel?.name}.`
+    )
+  }
 
-// const leaveVoiceChannel = (member) => {
-//   // console.log(global.voiceConnection, global.retryIntervals[member.user.id])
-//   global.voiceConnection.destroy()
-//   clearInterval(global.retryIntervals[member.user.id])
-// }
+  if (cameraDisabled(member, oldState, newState)) {
+    console.log(`${userName} camera disabled.`)
+  }
+
+  if (cameraEnabled(member, oldState, newState)) {
+    console.log(`${userName} camera enabled.`)
+  }
+}
