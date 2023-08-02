@@ -12,6 +12,16 @@ const mongoClient = new MongoClient(uri, {
   },
 })
 
+export const insertVoiceChannelEvent = async (member, channel, action) => {}
+
+export const getJoinTime = async () => {
+  const database = mongoClient.db("camera_on")
+  // @ts-ignore
+  const timeSettings = database.collection<TimeSetting>("timeSettings")
+  const result = await timeSettings.findOne({ name: "botJoin" })
+  return result.value
+}
+
 process.on("SIGINT", async () => {
   await mongoClient.close()
 })
