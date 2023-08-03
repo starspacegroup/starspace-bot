@@ -3,16 +3,13 @@ import { ObjectId } from "mongodb"
 export default class VoiceChannelEvent {
   constructor(
     public memberId: string,
-    public channel: string,
+    public memberName: string,
+    public channelId: string,
+    public channelName: string,
     public action: VoiceChannelAction,
     public timestamp: Date,
     public id?: ObjectId
   ) {}
 }
 
-export enum VoiceChannelAction {
-  Join = "join",
-  Leave = "leave",
-  Kick = "kick",
-  CameraOn = "camera_on",
-}
+export type VoiceChannelAction = "join" | "leave" | "cameraOn" | "cameraOff"

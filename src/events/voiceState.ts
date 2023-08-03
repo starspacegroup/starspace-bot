@@ -1,5 +1,6 @@
-import { getJoinTime } from "../connections/mongoDb"
+import { getJoinTime, insertVoiceChannelEvent } from "../connections/mongoDb"
 import TimeSetting from "../models/timeSetting"
+import ViuceChannelEvent from "../models/voiceChannelEvent"
 
 import {
   Events,
@@ -107,25 +108,40 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   const newCamState = newState.selfVideo ? "on" : "off"
   const bot = newState.client
 
-  if (memberJoined(member, oldState, newState)) {
-    console.log(`${userName} joined voice channel ${newState.channel?.name}.`)
+  if (memberJoined(member, oldState, newState) && member && newState.channel) {
+    console.log(`${userName} joined ${newState.channel?.name}.`)
+    insertVoiceChannelEvent(member, newState.channel, "join")
   }
 
-  if (memberLeft(member, oldState, newState)) {
-    console.log(`${userName} left voice channel ${newState.channel?.name}.`)
+  if (memberLeft(member, oldState, newState) && member && oldState.channel) {
+    console.log(`${userName} left ${oldState.channel?.name}.`)
+    insertVoiceChannelEvent(member, oldState.channel, "leave")
   }
 
-  if (memberMoved(member, oldState, newState)) {
+  if (
+    memberMoved(member, oldState, newState) &&
+    member &&
+    newState.channel &&
+    oldState.channel
+  ) {
     console.log(
-      `${userName} moved from voice channel ${oldState.channel?.name} to ${newState.channel?.name}.`
+      `${userName} moved from ${oldState.channel?.name} to ${newState.channel?.name}.`
     )
+    insertVoiceChannelEvent(member, oldState.channel, "leave")
+    insertVoiceChannelEvent(member, newState.channel, "join")
   }
 
-  if (cameraDisabled(member, oldState, newState)) {
+  if (
+    cameraDisabled(member, oldState, newState) &&
+    member &&
+    newState.channel
+  ) {
     console.log(`${userName} camera disabled.`)
+    insertVoiceChannelEvent(member, newState.channel, "cameraOff")
   }
 
-  if (cameraEnabled(member, oldState, newState)) {
+  if (cameraEnabled(member, oldState, newState) && member && newState.channel) {
     console.log(`${userName} camera enabled.`)
+    insertVoiceChannelEvent(member, newState.channel, "cameraOn")
   }
 }
