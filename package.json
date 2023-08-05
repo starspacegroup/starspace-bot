@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
-    "dev": "tsx ./src/camera-on.ts",
-    "start": "node -r dotenv/config dist/camera-on.js"
+    "dev": "tsx ./src/index.ts",
+    "start": "node -r dotenv/config dist/index.js"
   },
   "author": "davis9001",
   "license": "ISC",
