@@ -16,14 +16,14 @@ export const setwarntime = {
     // @ts-ignore
     const seconds = interaction.options.getNumber("seconds")
     await interaction.reply(`Updating botJoinSeconds to ${seconds} seconds.`)
-    await updateJoinTime(seconds, interaction).catch(async (err) => {
+    await updateJoinTimeSeconds(seconds, interaction).catch(async (err) => {
       await interaction.followUp("Error updating botJoinSeconds.")
       console.log(err)
     })
   },
 }
 
-async function updateJoinTime(
+async function updateJoinTimeSeconds(
   seconds: number,
   interaction: CommandInteraction
 ) {

@@ -20,14 +20,16 @@ export const settimeoutminutes = {
     await interaction.reply(
       `Updating timeoutLengthMinutes to ${minutes} minutes.`
     )
-    await updateJoinTime(minutes, interaction).catch(async (err) => {
-      await interaction.followUp("Error updating timeoutLengthMinutes.")
-      console.log(err)
-    })
+    await updateTimeouteLengthMinutes(minutes, interaction).catch(
+      async (err) => {
+        await interaction.followUp("Error updating timeoutLengthMinutes.")
+        console.log(err)
+      }
+    )
   },
 }
 
-async function updateJoinTime(
+async function updateTimeouteLengthMinutes(
   minutes: number,
   interaction: CommandInteraction
 ) {

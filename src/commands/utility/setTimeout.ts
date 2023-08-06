@@ -18,14 +18,18 @@ export const settimeout = {
     await interaction.reply(
       `Updating userTimeoutAfterXInfractions to ${infractions} infractions.`
     )
-    await updateJoinTime(infractions, interaction).catch(async (err) => {
-      await interaction.followUp("Error updating userTimeoutAfterXInfractions.")
-      console.log(err)
-    })
+    await updateTimeoutAfterXInfractions(infractions, interaction).catch(
+      async (err) => {
+        await interaction.followUp(
+          "Error updating userTimeoutAfterXInfractions."
+        )
+        console.log(err)
+      }
+    )
   },
 }
 
-async function updateJoinTime(
+async function updateTimeoutAfterXInfractions(
   infractions: number,
   interaction: CommandInteraction
 ) {

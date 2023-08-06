@@ -18,14 +18,14 @@ export const setkicktime = {
     await interaction.reply(
       `Updating userDisconnectSeconds to ${seconds} seconds.`
     )
-    await updateJoinTime(seconds, interaction).catch(async (err) => {
+    await updateKickTime(seconds, interaction).catch(async (err) => {
       await interaction.followUp("Error updating userDisconnectSeconds.")
       console.log(err)
     })
   },
 }
 
-async function updateJoinTime(
+async function updateKickTime(
   seconds: number,
   interaction: CommandInteraction
 ) {

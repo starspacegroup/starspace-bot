@@ -12,34 +12,41 @@ const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
 const token = process.env.DISCORD_BOT_TOKEN
 
-const commands: string[] = []
-// Grab all the command files from the commands directory you created earlier
-const foldersPath = path.join(__dirname, "commands")
-const commandFolders = fs.readdirSync(foldersPath)
+// const commands: string[] = []
+// // Grab all the command files from the commands directory you created earlier
+// const foldersPath = path.join(__dirname, "commands")
+// const commandFolders = fs.readdirSync(foldersPath)
 
 // const commands = { setwarntime, setkicktime, settimeout, settimeoutminutes }
-// const _commands = [setJoinTime, someOtherCommand, yetAnotherCommand].map(command => command.toJSON())
+const commands = [setwarntime, setkicktime, settimeout, settimeoutminutes].map(
+  (command) => command.command.toJSON()
+)
 
-for (const folder of commandFolders) {
-  // Grab all the command files from the commands directory you created earlier
-  const commandsPath = path.join(foldersPath, folder)
-  const commandFiles = fs
-    .readdirSync(commandsPath)
-    .filter((file) => file.endsWith(".js"))
-  // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
+// for (const command of commands) {
+//   // @ts-ignore
+//   client.commands.set(command.data.toJSON())
+// }
 
-  for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file)
-    const command = require(filePath)
-    if (command in command) {
-      commands.push(command.data.toJSON())
-    } else {
-      console.log(
-        `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
-      )
-    }
-  }
-}
+// for (const folder of commandFolders) {
+//   // Grab all the command files from the commands directory you created earlier
+//   const commandsPath = path.join(foldersPath, folder)
+//   const commandFiles = fs
+//     .readdirSync(commandsPath)
+//     .filter((file) => file.endsWith(".js"))
+//   // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
+
+//   for (const file of commandFiles) {
+//     const filePath = path.join(commandsPath, file)
+//     const command = require(filePath)
+//     if (command in command) {
+//       commands.push(command.data.toJSON())
+//     } else {
+//       console.log(
+//         `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+//       )
+//     }
+//   }
+// }
 
 // Construct and prepare an instance of the REST module
 // @ts-ignore
