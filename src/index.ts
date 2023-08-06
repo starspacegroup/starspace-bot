@@ -14,7 +14,10 @@ import fs from "node:fs"
 import path from "node:path"
 import { voiceStateEvent } from "./events/voiceState"
 // import { readyStateEvent } from "./events/ready"
-import { setjointime } from "./commands/utility/set-join-time"
+import { setwarntime } from "./commands/utility/setWarnTime"
+import { setkicktime } from "./commands/utility/setKickTime"
+import { settimeout } from "./commands/utility/setTimeout"
+import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
 
 const botToken = process.env.DISCORD_BOT_TOKEN
 
@@ -25,7 +28,10 @@ const client = new Client({
 client.on("voiceStateUpdate", voiceStateEvent)
 
 const commands = {
-  setjointime,
+  setwarntime,
+  setkicktime,
+  settimeout,
+  settimeoutminutes,
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {

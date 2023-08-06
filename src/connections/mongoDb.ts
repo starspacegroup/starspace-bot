@@ -45,8 +45,8 @@ export const insertVoiceChannelEvent = async (
 export const getJoinTime = async () => {
   const database = mongoClient.db("camera_on")
   // @ts-ignore
-  const timeSettings = database.collection<TimeSetting>("timeSettings")
-  const result = await timeSettings.findOne({ name: "botJoin" })
+  const numberSettings = database.collection<TimeSetting>("numberSettings")
+  const result = await numberSettings.findOne({ name: "botJoin" })
   return result.value
 }
 

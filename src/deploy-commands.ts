@@ -3,6 +3,10 @@ import fs from "node:fs"
 import path from "node:path"
 import * as dotenv from "dotenv"
 dotenv.config()
+import { setwarntime } from "./commands/utility/setWarnTime"
+import { setkicktime } from "./commands/utility/setKickTime"
+import { settimeout } from "./commands/utility/setTimeout"
+import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
 
 const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
@@ -13,6 +17,7 @@ const commands: string[] = []
 const foldersPath = path.join(__dirname, "commands")
 const commandFolders = fs.readdirSync(foldersPath)
 
+// const commands = { setwarntime, setkicktime, settimeout, settimeoutminutes }
 // const _commands = [setJoinTime, someOtherCommand, yetAnotherCommand].map(command => command.toJSON())
 
 for (const folder of commandFolders) {
@@ -26,7 +31,7 @@ for (const folder of commandFolders) {
   for (const file of commandFiles) {
     const filePath = path.join(commandsPath, file)
     const command = require(filePath)
-    if ("data" in command && "execute" in command) {
+    if (command in command) {
       commands.push(command.data.toJSON())
     } else {
       console.log(
