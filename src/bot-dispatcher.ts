@@ -2,20 +2,12 @@ import * as dotenv from "dotenv"
 dotenv.config()
 
 import mongoClient, { getNumberSetting } from "./connections/mongoDb"
-import NumberSetting, { NumberSettingType } from "./models/numberSetting"
-import VoiceChannelEvent, {
-  VoiceChannelAction,
-} from "./models/voiceChannelEvent"
+import VoiceChannelEvent from "./models/voiceChannelEvent"
 import {
   Client,
-  Collection,
-  VoiceChannel,
-  TextChannel,
   User,
   Events,
   GatewayIntentBits,
-  SlashCommandBuilder,
-  Channel,
   VoiceBasedChannel,
   GuildMember,
 } from "discord.js"
@@ -25,10 +17,8 @@ import {
   getVoiceConnection,
   VoiceConnection,
 } from "@discordjs/voice"
-import { warn } from "node:console"
 import { ChangeStreamInsertDocument } from "mongodb"
 let voiceConnection: VoiceConnection[] = []
-let membersNeedingWarning: User[] = []
 let warningJobs: Job[] = []
 let kickJobs: Job[] = []
 const botToken = process.env.DISCORD_BOT_TOKEN
