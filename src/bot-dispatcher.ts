@@ -6,17 +6,12 @@ import VoiceChannelEvent from "./models/voiceChannelEvent"
 import {
   Client,
   User,
-  Events,
   GatewayIntentBits,
   VoiceBasedChannel,
   GuildMember,
 } from "discord.js"
 import { Agenda, Job } from "@hokify/agenda"
-import {
-  joinVoiceChannel,
-  getVoiceConnection,
-  VoiceConnection,
-} from "@discordjs/voice"
+import { joinVoiceChannel, VoiceConnection } from "@discordjs/voice"
 import { ChangeStreamInsertDocument } from "mongodb"
 let voiceConnection: VoiceConnection[] = []
 let warningJobs: Job[] = []
@@ -24,7 +19,6 @@ let kickJobs: Job[] = []
 const botToken = process.env.DISCORD_BOT_TOKEN
 
 const database = mongoClient.db("camera_on")
-const jobs = mongoClient.db("camera_on").collection("jobs")
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
