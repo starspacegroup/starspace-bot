@@ -1,4 +1,4 @@
-import { getJoinTime, insertVoiceChannelEvent } from "../connections/mongoDb"
+import { insertVoiceChannelEvent } from "../connections/mongoDb"
 import mongoClient from "../connections/mongoDb"
 
 import {
@@ -21,19 +21,6 @@ import { checkPrimeSync } from "crypto"
 import { Agenda } from "@hokify/agenda"
 
 const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
-
-// Get join time from mongo
-// global.cameraWarningDelay = getJoinTime() // In seconds
-// global.cameraKickDelay = 5 // In seconds
-
-// client.on("voiceStateUpdate", async (oldState, newState) => {
-//   if (!newState.channel) {
-//     return
-//   }
-// })
-
-// @ts-ignore
-// const agenda = new Agenda({ mongo: mongoClient })
 
 const memberMoved = (
   member: GuildMember,

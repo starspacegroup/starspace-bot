@@ -8,7 +8,7 @@ export default class NumberSetting {
   ) {}
 }
 
-type NumberSettingType =
+export type NumberSettingType =
   | "botJoinSeconds" // warn time
   | "userDisconnectSeconds" // kick time
   | "userTimeoutAfterXInfractions" // timeout

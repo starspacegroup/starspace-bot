@@ -1,4 +1,5 @@
 import { MongoClient, ServerApiVersion } from "mongodb"
+import NumberSetting, { NumberSettingType } from "../models/numberSetting"
 import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
@@ -40,6 +41,14 @@ export const insertVoiceChannelEvent = async (
     timestamp: new Date(),
   })
   console.log(`A document was inserted with the _id: ${result.insertedId}`)
+}
+
+export const getNumberSetting = async (settingName: NumberSettingType) => {
+  const database = mongoClient.db("camera_on")
+  const result = await database
+    .collection<NumberSetting>("numberSettings")
+    .findOne({ name: settingName })
+  return result ? result.value : 0
 }
 
 export const getJoinTime = async () => {

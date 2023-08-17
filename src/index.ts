@@ -18,6 +18,9 @@ import { setwarntime } from "./commands/utility/setWarnTime"
 import { setkicktime } from "./commands/utility/setKickTime"
 import { settimeout } from "./commands/utility/setTimeout"
 import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
+import { botScheduler } from "./bot-dispatcher"
+
+botScheduler.run()
 
 const botToken = process.env.DISCORD_BOT_TOKEN
 
