@@ -1,24 +1,6 @@
 import { insertVoiceChannelEvent } from "../connections/mongoDb"
-import mongoClient from "../connections/mongoDb"
 
-import {
-  Events,
-  Client,
-  GatewayIntentBits,
-  VoiceState,
-  Channel,
-  VoiceBasedChannel,
-  GuildMember,
-} from "discord.js"
-import {
-  getVoiceConnection,
-  joinVoiceChannel,
-  createAudioPlayer,
-  createAudioResource,
-  AudioPlayerStatus,
-} from "@discordjs/voice"
-import { checkPrimeSync } from "crypto"
-import { Agenda } from "@hokify/agenda"
+import { GatewayIntentBits, VoiceState, GuildMember } from "discord.js"
 
 const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
 

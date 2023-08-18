@@ -3,13 +3,7 @@ import NumberSetting, { NumberSettingType } from "../models/numberSetting"
 import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
-import {
-  GuildMember,
-  VoiceState,
-  Channel,
-  VoiceChannel,
-  VoiceBasedChannel,
-} from "discord.js"
+import { GuildMember, VoiceBasedChannel } from "discord.js"
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
