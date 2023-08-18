@@ -93,6 +93,10 @@ const cameraEnabled = (
 export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   const member = newState.member
   const userName = member?.user.tag
+  if (userName === newState.client.user.tag) {
+    // ignore bot
+    return
+  }
   if (member) {
     if (memberJoined(member, oldState, newState) && newState.channel) {
       console.log(`${userName} joined ${newState.channel?.name}.`)
