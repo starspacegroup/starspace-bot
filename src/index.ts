@@ -1,19 +1,7 @@
-import {
-  Client,
-  Collection,
-  VoiceChannel,
-  TextChannel,
-  User,
-  Events,
-  GatewayIntentBits,
-  SlashCommandBuilder,
-} from "discord.js"
+import { Client, Events, GatewayIntentBits } from "discord.js"
 import * as dotenv from "dotenv"
 dotenv.config()
-import fs from "node:fs"
-import path from "node:path"
 import { voiceStateEvent } from "./events/voiceState"
-// import { readyStateEvent } from "./events/ready"
 import { setwarntime } from "./commands/utility/setWarnTime"
 import { setkicktime } from "./commands/utility/setKickTime"
 import { settimeout } from "./commands/utility/setTimeout"
