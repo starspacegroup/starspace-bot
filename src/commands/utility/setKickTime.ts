@@ -1,6 +1,10 @@
 import mongoClient from "../../connections/mongoDb"
 import NumberSetting from "../../models/numberSetting"
-import { CommandInteraction, SlashCommandBuilder } from "discord.js"
+import {
+  CommandInteraction,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from "discord.js"
 
 export const setkicktime = {
   command: new SlashCommandBuilder()
@@ -11,15 +15,14 @@ export const setkicktime = {
         .setName("seconds")
         .setDescription("The number of seconds")
         .setRequired(true)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const seconds = interaction.options.getNumber("seconds")
-    await interaction.reply(
-      `Updating userDisconnectSeconds to ${seconds} seconds.`
-    )
+    await interaction.deferReply()
     await updateKickTime(seconds, interaction).catch(async (err) => {
-      await interaction.followUp("Error updating userDisconnectSeconds.")
+      await interaction.editReply("Error updating userDisconnectSeconds.")
       console.log(err)
     })
   },
@@ -45,7 +48,7 @@ async function updateKickTime(
     console.log(
       `Updated userDisconnectSeconds in mongoDB: ${result.modifiedCount} documents.`
     )
-    interaction.followUp(`Updated userDisconnect to ${seconds} seconds.`)
+    interaction.editReply(`Updated userDisconnect to ${seconds} seconds.`)
   } catch (err) {
     if (err instanceof Error) {
       console.log(err.message)

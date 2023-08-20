@@ -1,6 +1,10 @@
 import mongoClient from "../../connections/mongoDb"
 import NumberSetting from "../../models/numberSetting"
-import { CommandInteraction, SlashCommandBuilder } from "discord.js"
+import {
+  CommandInteraction,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from "discord.js"
 
 export const setwarntime = {
   command: new SlashCommandBuilder()
@@ -11,13 +15,14 @@ export const setwarntime = {
         .setName("seconds")
         .setDescription("The number of seconds")
         .setRequired(true)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const seconds = interaction.options.getNumber("seconds")
-    await interaction.reply(`Updating botJoinSeconds to ${seconds} seconds.`)
+    await interaction.deferReply()
     await updateJoinTimeSeconds(seconds, interaction).catch(async (err) => {
-      await interaction.followUp("Error updating botJoinSeconds.")
+      await interaction.editReply("Error updating botJoinSeconds.")
       console.log(err)
     })
   },
@@ -43,7 +48,7 @@ async function updateJoinTimeSeconds(
     console.log(
       `Updated botJoinSeconds in mongoDB: ${result.modifiedCount} documents.`
     )
-    interaction.followUp(`Updated botJoinSeconds to ${seconds} seconds.`)
+    interaction.editReply(`Updated botJoinSeconds to ${seconds} seconds.`)
   } catch (err) {
     if (err instanceof Error) {
       console.log(err.message)

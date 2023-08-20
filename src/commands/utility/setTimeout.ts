@@ -1,6 +1,10 @@
 import mongoClient from "../../connections/mongoDb"
 import NumberSetting from "../../models/numberSetting"
-import { CommandInteraction, SlashCommandBuilder } from "discord.js"
+import {
+  CommandInteraction,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
+} from "discord.js"
 
 export const settimeout = {
   command: new SlashCommandBuilder()
@@ -11,16 +15,15 @@ export const settimeout = {
         .setName("infractions")
         .setDescription("The number of infractions")
         .setRequired(true)
-    ),
+    )
+    .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const infractions = interaction.options.getNumber("infractions")
-    await interaction.reply(
-      `Updating userTimeoutAfterXInfractions to ${infractions} infractions.`
-    )
+    await interaction.deferReply()
     await updateTimeoutAfterXInfractions(infractions, interaction).catch(
       async (err) => {
-        await interaction.followUp(
+        await interaction.editReply(
           "Error updating userTimeoutAfterXInfractions."
         )
         console.log(err)
@@ -49,7 +52,7 @@ async function updateTimeoutAfterXInfractions(
     console.log(
       `Updated userTimeoutAfterXInfractions in mongoDB: ${result.modifiedCount} documents.`
     )
-    interaction.followUp(
+    interaction.editReply(
       `Updated userTimeoutAfterXInfractions to ${infractions} infractions.`
     )
   } catch (err) {
