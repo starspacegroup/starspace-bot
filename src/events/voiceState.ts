@@ -93,8 +93,8 @@ const cameraEnabled = (
 export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   const member = newState.member
   const userName = member?.user.tag
-  if (userName === newState.client.user.tag) {
-    // ignore bot
+  if (userName === newState.client.user.tag || member?.user.bot) {
+    // ignore myself and other bots
     return
   }
   if (member) {
