@@ -17,7 +17,7 @@ import { isArgumentsObject } from "util/types"
 import { warn } from "console"
 import { createReadStream } from "fs"
 import { join } from "path"
-let voiceConnection: VoiceConnection[] = []
+let voiceConnection: VoiceConnection | null
 let warningJobs: Job[] = []
 let kickJobs: Job[] = []
 const botToken = process.env.DISCORD_BOT_TOKEN
@@ -98,7 +98,7 @@ const triggerWarning = async (
       botJoinAndPlayMusic(channel, user)
     }
   )
-  await agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
+  agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
 }
 const crisisAverted = async (
   user: User,
@@ -113,9 +113,9 @@ const crisisAverted = async (
     await agenda.cancel({ name: `warn-${user.id}` })
     delete warningJobs[`warn-${user.id}`]
   }
-  if (`warn-${user.id}` in voiceConnection) {
-    voiceConnection[`warn-${user.id}`].disconnect()
-    delete voiceConnection[`warn-${user.id}`]
+  if (voiceConnection) {
+    voiceConnection.disconnect()
+    voiceConnection = null
   }
   if (`kick-${user.id}` in kickJobs) {
     await agenda.cancel({ name: `kick-${user.id}` })
@@ -131,7 +131,7 @@ const botJoinAndPlayMusic = async (
   if (guildMember.voice.channel == null || guildMember.voice.selfVideo) {
     return
   }
-  if (voiceConnection.length > 0) {
+  if (voiceConnection) {
     console.log(
       "Gotta retry later when the bot isn't already in a voice channel."
     )
@@ -140,11 +140,13 @@ const botJoinAndPlayMusic = async (
     warningJobs[`warn-${member.id}`] = agenda.define(
       `warn-${member.id}`,
       async (job) => {
-        console.log(`Joining on ${user.tag} in voice channel: ${channel.name}.`)
+        console.log(
+          `Trying to join on ${user.tag} in voice channel: ${channel.name}.`
+        )
         botJoinAndPlayMusic(channel, member)
       }
     )
-    agenda.schedule(`1s`, `warn-${member.id}`)
+    agenda.schedule(`in 3 seconds`, `warn-${member.id}`)
     return
   }
   const user = await discordClient.users.fetch(member)
@@ -158,13 +160,14 @@ const botJoinAndPlayMusic = async (
   console.log(join(__dirname, "../audio.mp3"))
 
   const kickSeconds = await getNumberSetting("userDisconnectSeconds")
-  voiceConnection[`warn-${member.id}`] = joinVoiceChannel({
+  voiceConnection = joinVoiceChannel({
     channelId: channel.id,
     guildId: channel.guild.id,
     adapterCreator: channel.guild.voiceAdapterCreator,
   })
+  console.log(`Voice connection:` + voiceConnection)
   player.play(resource)
-  voiceConnection[`warn-${member.id}`].subscribe(player)
+  voiceConnection.subscribe(player)
   console.log(
     `Setting job to disconnect ${member.tag} in ${channel.name} in ${kickSeconds} seconds.`
   )
@@ -180,7 +183,10 @@ const botJoinAndPlayMusic = async (
 
 const botDisconnectSelf = (member: User, player) => {
   player.stop()
-  voiceConnection[`warn-${member.id}`].disconnect()
+  if (voiceConnection) {
+    voiceConnection.disconnect()
+    voiceConnection = null
+  }
 }
 
 const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
