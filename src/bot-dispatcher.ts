@@ -7,14 +7,11 @@ import { Client, User, GatewayIntentBits, VoiceBasedChannel } from "discord.js"
 import { createAudioPlayer } from "@discordjs/voice"
 import { Agenda, Job } from "@hokify/agenda"
 import {
-  AudioPlayerStatus,
   createAudioResource,
   joinVoiceChannel,
   VoiceConnection,
 } from "@discordjs/voice"
 import { ChangeStreamInsertDocument } from "mongodb"
-import { isArgumentsObject } from "util/types"
-import { warn } from "console"
 import { createReadStream } from "fs"
 import { join } from "path"
 let voiceConnection: VoiceConnection | null
@@ -57,36 +54,33 @@ export const botScheduler = {
       const channelID = change.fullDocument.channelId
       const memberID = change.fullDocument.memberId
       const user = await discordClient.users.fetch(memberID)
-      const channel = await discordClient.channels.cache.get(channelID)
+      const botUser = discordClient?.user?.id
+      const channel = discordClient.channels.cache.get(channelID)
       const action = change.fullDocument.action
       const timestamp = change.fullDocument.timestamp
 
-      if (user && channel?.isVoiceBased()) {
+      if (user && channel?.isVoiceBased() && botUser) {
+        const botGuildMember = await channel?.guild.members.fetch(botUser)
+        if (!channel.permissionsFor(botGuildMember).has("Connect")) {
+          // ignore channels the bot can't join
+          return
+        }
         switch (action) {
-          case "join":
-            triggerWarning(user, timestamp, channel)
+          case "join" || "cameraOff":
+            triggerWarning(user, channel)
             break
           case "leave":
-            crisisAverted(user, timestamp, channel, "left channel")
-            break
-          case "cameraOff":
-            triggerWarning(user, timestamp, channel)
+            crisisAverted(user, `left ${channel.name}.`)
             break
           case "cameraOn":
-            crisisAverted(user, timestamp, channel, "turned on camera")
+            crisisAverted(user, "turned on camera")
             break
         }
       }
-
-      console.log(`change: ${JSON.stringify(action)}`)
     })
   },
 }
-const triggerWarning = async (
-  user: User,
-  time: Date,
-  channel: VoiceBasedChannel
-) => {
+const triggerWarning = async (user: User, channel: VoiceBasedChannel) => {
   const botJoinSeconds = await getNumberSetting("botJoinSeconds")
   console.log(
     `Waiting ${botJoinSeconds} seconds for ${user.tag} to turn on camera.`
@@ -100,12 +94,7 @@ const triggerWarning = async (
   )
   agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
 }
-const crisisAverted = async (
-  user: User,
-  time: Date,
-  channel: VoiceBasedChannel,
-  action: string
-) => {
+const crisisAverted = async (user: User, action: string) => {
   console.log(
     `User ${user.tag} ${action}, cancelling any pending warnings/kicks.`
   )
@@ -128,28 +117,32 @@ const botJoinAndPlayMusic = async (
   member: User
 ) => {
   const guildMember = await channel.guild.members.fetch(member.id)
-  if (guildMember.voice.channel == null || guildMember.voice.selfVideo) {
-    return
-  }
   if (voiceConnection) {
     console.log(
       "Gotta retry later when the bot isn't already in a voice channel."
     )
-    agenda.cancel({ jobName: `warn-${member.id}` })
-    delete warningJobs[`warn-${member.id}`]
-    warningJobs[`warn-${member.id}`] = agenda.define(
-      `warn-${member.id}`,
-      async (job) => {
-        console.log(
-          `Trying to join on ${user.tag} in voice channel: ${channel.name}.`
-        )
-        botJoinAndPlayMusic(channel, member)
-      }
+    // await agenda.cancel({ jobName: `warn-${member.id}` }).then()
+    // delete warningJobs[`warn-${member.id}`]
+    // warningJobs[`warn-${member.id}`] = agenda.define(
+    //   `warn-${member.id}`,
+    //   async () => {
+    //     console.log(
+    //       `Retrying to join on ${user.tag} in voice channel: ${channel.name}.`
+    //     )
+    //     botJoinAndPlayMusic(channel, member)
+    //   }
+    // )
+    await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
+    console.log(
+      `Scheduled retry to join on ${member.tag} in voice channel: ${channel.name}.`
     )
-    agenda.schedule(`in 3 seconds`, `warn-${member.id}`)
+    return
+  }
+  if (guildMember.voice.channel == null || guildMember.voice.selfVideo) {
     return
   }
   const user = await discordClient.users.fetch(member)
+
   const player = createAudioPlayer()
   let resource = createAudioResource(
     createReadStream(join(__dirname, "../audio.mp3"))
@@ -157,7 +150,6 @@ const botJoinAndPlayMusic = async (
   if (resource.volume) {
     resource.volume.setVolume(0.5)
   }
-  console.log(join(__dirname, "../audio.mp3"))
 
   const kickSeconds = await getNumberSetting("userDisconnectSeconds")
   voiceConnection = joinVoiceChannel({
