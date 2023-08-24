@@ -90,7 +90,7 @@ const triggerWarning = async (user: User, channel: VoiceBasedChannel) => {
     `warn-${user.id}`,
     async (job) => {
       console.log(`Joining on ${user.tag} in voice channel: ${channel.name}.`)
-      botJoinAndPlayMusic(channel, user)
+      botDoWarning(channel, user)
     }
   )
   agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
@@ -113,26 +113,12 @@ const crisisAverted = async (user: User, action: string) => {
   }
 }
 
-const botJoinAndPlayMusic = async (
-  channel: VoiceBasedChannel,
-  member: User
-) => {
+const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
   const guildMember = await channel.guild.members.fetch(member.id)
   if (voiceConnection) {
     console.log(
       "Gotta retry later when the bot isn't already in a voice channel."
     )
-    // await agenda.cancel({ jobName: `warn-${member.id}` }).then()
-    // delete warningJobs[`warn-${member.id}`]
-    // warningJobs[`warn-${member.id}`] = agenda.define(
-    //   `warn-${member.id}`,
-    //   async () => {
-    //     console.log(
-    //       `Retrying to join on ${user.tag} in voice channel: ${channel.name}.`
-    //     )
-    //     botJoinAndPlayMusic(channel, member)
-    //   }
-    // )
     await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
     console.log(
       `Scheduled retry to join on ${member.tag} in voice channel: ${channel.name}.`
@@ -153,6 +139,9 @@ const botJoinAndPlayMusic = async (
   }
 
   const kickSeconds = await getNumberSetting("userDisconnectSeconds")
+  member.send(
+    `Hey ${member} turn on your camera! Otherwise you will be disconnected in ${kickSeconds} seconds.`
+  )
   voiceConnection = joinVoiceChannel({
     channelId: channel.id,
     guildId: channel.guild.id,
@@ -191,6 +180,8 @@ const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
     const disconnectSeconds = await getNumberSetting("userDisconnectSeconds")
     const joinSeconds = await getNumberSetting("botJoinSeconds")
     const seconds = disconnectSeconds + joinSeconds
+
+    member.send(`Disconnected ${member} for not turning on their camera!`)
 
     const guildMember = await channel.guild.members.fetch(member.id)
 
