@@ -66,7 +66,8 @@ export const botScheduler = {
           return
         }
         switch (action) {
-          case "join" || "cameraOff":
+          case "join":
+          case "cameraOff":
             triggerWarning(user, channel)
             break
           case "leave":
