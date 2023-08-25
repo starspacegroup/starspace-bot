@@ -57,7 +57,6 @@ export const botScheduler = {
       const botUser = discordClient?.user?.id
       const channel = discordClient.channels.cache.get(channelID)
       const action = change.fullDocument.action
-      const timestamp = change.fullDocument.timestamp
 
       if (user && channel?.isVoiceBased() && botUser) {
         const botGuildMember = await channel?.guild.members.fetch(botUser)
@@ -139,7 +138,7 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
   }
 
   const kickSeconds = await getNumberSetting("userDisconnectSeconds")
-  member.send(
+  channel.send(
     `Hey ${member} turn on your camera! Otherwise you will be disconnected in ${kickSeconds} seconds.`
   )
   voiceConnection = joinVoiceChannel({
@@ -181,7 +180,9 @@ const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
     const joinSeconds = await getNumberSetting("botJoinSeconds")
     const seconds = disconnectSeconds + joinSeconds
 
-    member.send(`Disconnected ${member} for not turning on their camera!`)
+    channel.send(
+      `Disconnected ${member} for not turning on their camera in ${seconds} seconds!`
+    )
 
     const guildMember = await channel.guild.members.fetch(member.id)
 
