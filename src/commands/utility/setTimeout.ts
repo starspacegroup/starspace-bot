@@ -1,3 +1,4 @@
+import log from "../../lib/logger"
 import mongoClient from "../../connections/mongoDb"
 import NumberSetting from "../../models/numberSetting"
 import {
@@ -26,7 +27,7 @@ export const settimeout = {
         await interaction.editReply(
           "Error updating userTimeoutAfterXInfractions."
         )
-        console.log(err)
+        log(err)
       }
     )
   },
@@ -49,7 +50,7 @@ async function updateTimeoutAfterXInfractions(
       },
       { upsert: true }
     )
-    console.log(
+    log(
       `Updated userTimeoutAfterXInfractions in mongoDB: ${result.modifiedCount} documents.`
     )
     interaction.editReply(
@@ -57,7 +58,7 @@ async function updateTimeoutAfterXInfractions(
     )
   } catch (err) {
     if (err instanceof Error) {
-      console.log(err.message)
+      log(err.message)
     }
   }
 }

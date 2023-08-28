@@ -1,4 +1,5 @@
 import mongoClient from "../../connections/mongoDb"
+import log from "../../lib/logger"
 import NumberSetting from "../../models/numberSetting"
 import {
   CommandInteraction,
@@ -23,7 +24,7 @@ export const setwarntime = {
     await interaction.deferReply()
     await updateJoinTimeSeconds(seconds, interaction).catch(async (err) => {
       await interaction.editReply("Error updating botJoinSeconds.")
-      console.log(err)
+      log(err)
     })
   },
 }
@@ -45,13 +46,11 @@ async function updateJoinTimeSeconds(
       },
       { upsert: true }
     )
-    console.log(
-      `Updated botJoinSeconds in mongoDB: ${result.modifiedCount} documents.`
-    )
+    log(`Updated botJoinSeconds in mongoDB: ${result.modifiedCount} documents.`)
     interaction.editReply(`Updated botJoinSeconds to ${seconds} seconds.`)
   } catch (err) {
     if (err instanceof Error) {
-      console.log(err.message)
+      log(err.message)
     }
   }
 }

@@ -1,9 +1,16 @@
 import * as dotenv from "dotenv"
 dotenv.config()
 
+import log from "./lib/logger"
 import mongoClient, { getNumberSetting } from "./connections/mongoDb"
 import VoiceChannelEvent from "./models/voiceChannelEvent"
-import { Client, User, GatewayIntentBits, VoiceBasedChannel } from "discord.js"
+import {
+  Client,
+  User,
+  GatewayIntentBits,
+  VoiceBasedChannel,
+  PermissionsBitField,
+} from "discord.js"
 import { createAudioPlayer } from "@discordjs/voice"
 import { Agenda, Job } from "@hokify/agenda"
 import {
@@ -14,6 +21,7 @@ import {
 import { ChangeStreamInsertDocument } from "mongodb"
 import { createReadStream } from "fs"
 import { join } from "path"
+import { warn } from "console"
 let voiceConnection: VoiceConnection | null
 let warningJobs: Job[] = []
 let kickJobs: Job[] = []
@@ -60,8 +68,15 @@ export const botScheduler = {
 
       if (user && channel?.isVoiceBased() && botUser) {
         const botGuildMember = await channel?.guild.members.fetch(botUser)
-        if (!channel.permissionsFor(botGuildMember).has("Connect")) {
-          // ignore channels the bot can't join
+        if (
+          !channel
+            .permissionsFor(botGuildMember)
+            .has(PermissionsBitField.Flags.Connect) ||
+          !channel
+            .permissionsFor(botGuildMember)
+            .has(PermissionsBitField.Flags.SendMessages)
+        ) {
+          // ignore channels the bot can't join or send messages in
           return
         }
         switch (action) {
@@ -82,81 +97,70 @@ export const botScheduler = {
 }
 const triggerWarning = async (user: User, channel: VoiceBasedChannel) => {
   const botJoinSeconds = await getNumberSetting("botJoinSeconds")
-  console.log(
-    `Waiting ${botJoinSeconds} seconds for ${user.tag} to turn on camera.`
-  )
+  log(`Waiting ${botJoinSeconds} seconds for ${user.tag} to turn on camera.`)
   warningJobs[`warn-${user.id}`] = agenda.define(
     `warn-${user.id}`,
     async (job) => {
-      console.log(`Joining on ${user.tag} in voice channel: ${channel.name}.`)
+      log(`Joining on ${user.tag} in voice channel: ${channel.name}.`)
       botDoWarning(channel, user)
     }
   )
-  agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
+  await agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
 }
 const crisisAverted = async (user: User, action: string) => {
-  console.log(
-    `User ${user.tag} ${action}, cancelling any pending warnings/kicks.`
-  )
-  if (`warn-${user.id}` in warningJobs) {
-    await agenda.cancel({ name: `warn-${user.id}` })
-    delete warningJobs[`warn-${user.id}`]
-  }
+  log(`User ${user.tag} ${action}, cancelling any pending warnings/kicks.`)
+  cancelJobs(user.id)
   if (voiceConnection) {
     voiceConnection.disconnect()
     voiceConnection = null
   }
-  if (`kick-${user.id}` in kickJobs) {
-    await agenda.cancel({ name: `kick-${user.id}` })
-    delete kickJobs[`kick-${user.id}`]
-  }
 }
 
 const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
+  log("Doing bot warning.")
   const guildMember = await channel.guild.members.fetch(member.id)
   if (voiceConnection) {
-    console.log(
-      "Gotta retry later when the bot isn't already in a voice channel."
-    )
-    await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
-    console.log(
+    log("Gotta retry later when the bot isn't already in a voice channel.")
+    agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
+    log(
       `Scheduled retry to join on ${member.tag} in voice channel: ${channel.name}.`
     )
     return
   }
   if (guildMember.voice.channel == null || guildMember.voice.selfVideo) {
+    cancelJobs(member.id)
     return
   }
   const user = await discordClient.users.fetch(member)
 
   const player = createAudioPlayer()
   let resource = createAudioResource(
-    createReadStream(join(__dirname, "../audio.mp3"))
+    createReadStream(join(__dirname, "../audio_1.mp3"))
   )
   if (resource.volume) {
     resource.volume.setVolume(0.5)
   }
 
   const kickSeconds = await getNumberSetting("userDisconnectSeconds")
-  channel.send(
-    `Hey ${member} turn on your camera! Otherwise you will be disconnected in ${kickSeconds} seconds.`
-  )
+  // channel.send(
+  //   `Hey ${member} turn on your camera! Otherwise you will be disconnected in ${kickSeconds} seconds.`
+  // )
   voiceConnection = joinVoiceChannel({
     channelId: channel.id,
     guildId: channel.guild.id,
     adapterCreator: channel.guild.voiceAdapterCreator,
   })
-  console.log(`Voice connection:` + voiceConnection)
+  log(`Voice connection:` + voiceConnection)
   player.play(resource)
   voiceConnection.subscribe(player)
-  console.log(
+  log(
     `Setting job to disconnect ${member.tag} in ${channel.name} in ${kickSeconds} seconds.`
   )
   kickJobs[`kick-${member.id}`] = agenda.define(
     `kick-${member.id}`,
     async (job) => {
-      console.log(`Disconnecting ${member.tag}.`)
-      await disconnectUser(user, channel)
+      log(`Disconnecting ${member.tag}.`)
+      disconnectUser(user, channel)
     }
   )
   agenda.schedule(`${kickSeconds}s`, `kick-${member.id}`)
@@ -180,9 +184,9 @@ const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
     const joinSeconds = await getNumberSetting("botJoinSeconds")
     const seconds = disconnectSeconds + joinSeconds
 
-    channel.send(
-      `Disconnected ${member} for not turning on their camera in ${seconds} seconds!`
-    )
+    // channel.send(
+    //   `Disconnected ${member} for not turning on their camera in ${seconds} seconds!`
+    // )
 
     const guildMember = await channel.guild.members.fetch(member.id)
 
@@ -190,8 +194,23 @@ const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
       guildMember.voice.disconnect(`Camera not on for ${seconds}`)
       guildMember.client.voice.client.destroy
     }
-    console.log(`User ${member.tag} disconnected.`)
+    log(`User ${member.tag} disconnected.`)
   } catch (error) {
-    console.log(error)
+    log(error)
+  }
+}
+
+const cancelJobs = async (member: string) => {
+  log(`Cancelling jobs for ${member}.`)
+  const warnJobTitle = `warn-${member}`
+  const kickJobTitle = `kick-${member}`
+
+  if (warnJobTitle in warningJobs) {
+    agenda.cancel({ name: warnJobTitle })
+    delete warningJobs[warnJobTitle]
+  }
+  if (kickJobTitle in kickJobs) {
+    agenda.cancel({ name: kickJobTitle })
+    delete kickJobs[kickJobTitle]
   }
 }

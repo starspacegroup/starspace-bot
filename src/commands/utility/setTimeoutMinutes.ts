@@ -1,4 +1,5 @@
 import mongoClient from "../../connections/mongoDb"
+import log from "../../lib/logger"
 import NumberSetting from "../../models/numberSetting"
 import {
   CommandInteraction,
@@ -26,7 +27,7 @@ export const settimeoutminutes = {
     await updateTimeouteLengthMinutes(minutes, interaction).catch(
       async (err) => {
         await interaction.editReply("Error updating timeoutLengthMinutes.")
-        console.log(err)
+        log(err)
       }
     )
   },
@@ -49,13 +50,13 @@ async function updateTimeouteLengthMinutes(
       },
       { upsert: true }
     )
-    console.log(
+    log(
       `Updated timeoutLengthMinutes in mongoDB: ${result.modifiedCount} documents.`
     )
     interaction.editReply(`Updated timeoutLengthMinutes to ${minutes} minutes.`)
   } catch (err) {
     if (err instanceof Error) {
-      console.log(err.message)
+      log(err.message)
     }
   }
 }

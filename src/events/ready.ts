@@ -1,9 +1,10 @@
 import { Events } from "discord.js"
+import log from "../lib/logger"
 
 module.exports = {
   name: Events.ClientReady,
   once: true,
   execute(client) {
-    console.log(`Ready! Logged in as ${client.user.tag}`)
+    log(`Ready! Logged in as ${client.user.tag}`)
   },
 }

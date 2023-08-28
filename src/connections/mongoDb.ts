@@ -4,6 +4,7 @@ import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
 import { GuildMember, VoiceBasedChannel } from "discord.js"
+import log from "../lib/logger"
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
@@ -34,7 +35,7 @@ export const insertVoiceChannelEvent = async (
     action: action,
     timestamp: new Date(),
   })
-  console.log(`A document was inserted with the _id: ${result.insertedId}`)
+  log(`A document was inserted with the _id: ${result.insertedId}`)
 }
 
 export const getNumberSetting = async (settingName: NumberSettingType) => {

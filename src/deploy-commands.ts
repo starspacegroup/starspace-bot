@@ -7,6 +7,7 @@ import { setwarntime } from "./commands/utility/setWarnTime"
 import { setkicktime } from "./commands/utility/setKickTime"
 import { settimeout } from "./commands/utility/setTimeout"
 import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
+import log from "./lib/logger"
 
 const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
@@ -41,7 +42,7 @@ const commands = [setwarntime, setkicktime, settimeout, settimeoutminutes].map(
 //     if (command in command) {
 //       commands.push(command.data.toJSON())
 //     } else {
-//       console.log(
+//       log(
 //         `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
 //       )
 //     }
@@ -55,9 +56,7 @@ const rest = new REST().setToken(token)
 // and deploy your commands!
 ;(async () => {
   try {
-    console.log(
-      `Started refreshing ${commands.length} application (/) commands.`
-    )
+    log(`Started refreshing ${commands.length} application (/) commands.`)
 
     // The put method is used to fully refresh all commands in the guild with the current set
     const data = await rest.put(
@@ -66,7 +65,7 @@ const rest = new REST().setToken(token)
       { body: commands }
     )
 
-    console.log(
+    log(
       // @ts-ignore
       `Successfully reloaded ${data.length} application (/) commands.`
     )

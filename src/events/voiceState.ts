@@ -1,6 +1,7 @@
 import { insertVoiceChannelEvent } from "../connections/mongoDb"
 
 import { GatewayIntentBits, VoiceState, GuildMember } from "discord.js"
+import log from "../lib/logger"
 
 const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
 
@@ -99,12 +100,12 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   }
   if (member) {
     if (memberJoined(member, oldState, newState) && newState.channel) {
-      console.log(`${userName} joined ${newState.channel?.name}.`)
+      log(`${userName} joined ${newState.channel?.name}.`)
       insertVoiceChannelEvent(member, newState.channel, "join")
     }
 
     if (memberLeft(member, oldState, newState) && oldState.channel) {
-      console.log(`${userName} left ${oldState.channel?.name}.`)
+      log(`${userName} left ${oldState.channel?.name}.`)
       insertVoiceChannelEvent(member, oldState.channel, "leave")
     }
 
@@ -113,7 +114,7 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
       newState.channel &&
       oldState.channel
     ) {
-      console.log(
+      log(
         `${userName} moved from ${oldState.channel?.name} to ${newState.channel?.name}.`
       )
       insertVoiceChannelEvent(member, oldState.channel, "leave")
@@ -121,12 +122,12 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
     }
 
     if (cameraDisabled(member, oldState, newState) && newState.channel) {
-      console.log(`${userName} camera disabled.`)
+      log(`${userName} camera disabled.`)
       insertVoiceChannelEvent(member, newState.channel, "cameraOff")
     }
 
     if (cameraEnabled(member, oldState, newState) && newState.channel) {
-      console.log(`${userName} camera enabled.`)
+      log(`${userName} camera enabled.`)
       insertVoiceChannelEvent(member, newState.channel, "cameraOn")
     }
   }

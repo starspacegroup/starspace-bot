@@ -1,3 +1,4 @@
+import log from "../../lib/logger"
 import mongoClient from "../../connections/mongoDb"
 import NumberSetting from "../../models/numberSetting"
 import {
@@ -23,7 +24,7 @@ export const setkicktime = {
     await interaction.deferReply()
     await updateKickTime(seconds, interaction).catch(async (err) => {
       await interaction.editReply("Error updating userDisconnectSeconds.")
-      console.log(err)
+      log(err)
     })
   },
 }
@@ -45,13 +46,13 @@ async function updateKickTime(
       },
       { upsert: true }
     )
-    console.log(
+    log(
       `Updated userDisconnectSeconds in mongoDB: ${result.modifiedCount} documents.`
     )
     interaction.editReply(`Updated userDisconnect to ${seconds} seconds.`)
   } catch (err) {
     if (err instanceof Error) {
-      console.log(err.message)
+      log(err.message)
     }
   }
 }
