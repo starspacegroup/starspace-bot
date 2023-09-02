@@ -25,6 +25,8 @@ import { warn } from "console"
 let voiceConnection: VoiceConnection | null
 let warningJobs: Job[] = []
 let kickJobs: Job[] = []
+// var warningJobs: { [key: string]: Job }
+// var kickJobs: { [key: string]: Job }
 const botToken = process.env.DISCORD_BOT_TOKEN
 
 const database = mongoClient.db("camera_on")
@@ -35,6 +37,7 @@ const agenda = new Agenda({
   db: {
     address: `mongodb+srv://${mongoUser}:${mongoPass}@cameraon.ihn5vri.mongodb.net/${mongoDb}?retryWrites=true&w=majority`,
   },
+  processEvery: "500ms",
 })
 const discordClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
@@ -117,14 +120,14 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
   const guildMember = await channel.guild.members.fetch(member.id)
   if (voiceConnection) {
     log("Gotta retry later when the bot isn't already in a voice channel.")
-    agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
+    await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
     log(
       `Scheduled retry to join on ${member.tag} in voice channel: ${channel.name}.`
     )
     return
   }
   if (guildMember.voice.channel == null || guildMember.voice.selfVideo) {
-    cancelJobs(member.id)
+    // don't run when the user isn't in a voice channel or has cam on
     return
   }
   const user = await discordClient.users.fetch(member)
@@ -146,7 +149,6 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
     guildId: channel.guild.id,
     adapterCreator: channel.guild.voiceAdapterCreator,
   })
-  log(`Voice connection:` + voiceConnection)
   player.play(resource)
   voiceConnection.subscribe(player)
   log(
@@ -159,7 +161,7 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
       disconnectUser(user, channel)
     }
   )
-  agenda.schedule(`${kickSeconds}s`, `kick-${member.id}`)
+  await agenda.schedule(`${kickSeconds}s`, `kick-${member.id}`)
 }
 
 const botDisconnectSelf = (member: User, player) => {
@@ -173,6 +175,9 @@ const botDisconnectSelf = (member: User, player) => {
 const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
   const guildMember = await channel.guild.members.fetch(member.id)
   if (guildMember.voice.channel != null && guildMember.voice.selfVideo) {
+    log(
+      `Skipping disconnect of ${member.tag} because they're not in ${channel.name} or they turned on their camera.`
+    )
     return
   }
   try {
@@ -197,16 +202,19 @@ const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
 }
 
 const cancelJobs = async (member: string) => {
-  log(`Cancelling jobs for ${member}.`)
   const warnJobTitle = `warn-${member}`
   const kickJobTitle = `kick-${member}`
 
   if (warnJobTitle in warningJobs) {
-    agenda.cancel({ name: warnJobTitle })
     delete warningJobs[warnJobTitle]
+    const jobs = await agenda.jobs({ name: warnJobTitle })
+    jobs.forEach((job) => job.disable())
+    jobs.forEach((job) => job.save())
   }
   if (kickJobTitle in kickJobs) {
-    agenda.cancel({ name: kickJobTitle })
     delete kickJobs[kickJobTitle]
+    const jobs = await agenda.jobs({ name: kickJobTitle })
+    jobs.forEach((job) => job.disable())
+    jobs.forEach((job) => job.save())
   }
 }
