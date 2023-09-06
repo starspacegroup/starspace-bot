@@ -35,7 +35,7 @@ export const insertVoiceChannelEvent = async (
     action: action,
     timestamp: new Date(),
   })
-  log(`A document was inserted with the _id: ${result.insertedId}`)
+  // log(`A document was inserted with the _id: ${result.insertedId}`)
 }
 
 export const getNumberSetting = async (settingName: NumberSettingType) => {
