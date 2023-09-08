@@ -2,7 +2,7 @@
   "name": "camera-on",
   "version": "1.0.0",
   "description": "A discord bot that enforces a camera on rule for voice chat users.",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
     "build": "rm -rf ./dist && tsc",
     "dev": "tsx ./src/main.ts",
