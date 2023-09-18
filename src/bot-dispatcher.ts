@@ -119,7 +119,6 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
   log("Doing bot warning.")
   const guildMember = await channel.guild.members.fetch(member.id)
   if (voiceConnection) {
-    log("Gotta retry later when the bot isn't already in a voice channel.")
     await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
     log(
       `Scheduled retry to join on ${member.tag} in voice channel: ${channel.name}.`
@@ -162,14 +161,6 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
     }
   )
   await agenda.schedule(`${kickSeconds}s`, `kick-${member.id}`)
-}
-
-const botDisconnectSelf = (member: User, player) => {
-  player.stop()
-  if (voiceConnection) {
-    voiceConnection.disconnect()
-    voiceConnection = null
-  }
 }
 
 const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
