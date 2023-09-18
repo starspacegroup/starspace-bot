@@ -140,9 +140,9 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
   }
 
   const kickSeconds = await getNumberSetting("userDisconnectSeconds")
-  // channel.send(
-  //   `Hey ${member} turn on your camera! Otherwise you will be disconnected in ${kickSeconds} seconds.`
-  // )
+  channel.send(
+    `Hey ${member} please turn on your camera. Otherwise you will be disconnected in ${kickSeconds} seconds.`
+  )
   voiceConnection = joinVoiceChannel({
     channelId: channel.id,
     guildId: channel.guild.id,
@@ -176,9 +176,9 @@ const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
     const joinSeconds = await getNumberSetting("botJoinSeconds")
     const seconds = disconnectSeconds + joinSeconds
 
-    // channel.send(
-    //   `Disconnected ${member} for not turning on their camera in ${seconds} seconds!`
-    // )
+    channel.send(
+      `Disconnected ${member} for not turning on their camera in ${seconds} seconds.`
+    )
 
     const guildMember = await channel.guild.members.fetch(member.id)
 
