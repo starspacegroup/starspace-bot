@@ -37,7 +37,7 @@ const agenda = new Agenda({
   db: {
     address: `mongodb+srv://${mongoUser}:${mongoPass}@cameraon.ihn5vri.mongodb.net/${mongoDb}?retryWrites=true&w=majority`,
   },
-  processEvery: "500ms",
+  processEvery: "15ms",
 })
 const discordClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
