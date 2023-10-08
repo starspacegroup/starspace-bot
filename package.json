@@ -4,10 +4,11 @@
   "description": "A discord bot that enforces a camera on rule for voice chat users.",
   "main": "main.js",
   "scripts": {
-    "build": "rm -rf ./dist && npm run tsc",
+    "build": "rm -rf ./dist && tsc",
     "dev": "tsx ./src/main.ts",
     "start": "node -r dotenv/config dist/main.js",
-    "tsc": "tsc"
+    "tsc": "./node_modules/typescript/bin/tsc",
+    "postinstall": "npm run build"
   },
   "author": "davis9001",
   "license": "ISC",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
+    "tsc": "^2.0.4",
     "tsx": "^3.12.7",
     "typescript": "^5.1.6"
   }
