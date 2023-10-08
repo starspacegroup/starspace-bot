@@ -1,2 +1,2 @@
 release: yarn build
-worker: yarn run
+worker: yarn start
