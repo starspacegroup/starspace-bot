@@ -4,7 +4,7 @@
   "description": "A discord bot that enforces a camera on rule for voice chat users.",
   "main": "main.js",
   "scripts": {
-    "build": "rm -rf ./dist && tsc",
+    "build": "rm -rf ./dist && npm run tsc",
     "dev": "tsx ./src/main.ts",
     "start": "node -r dotenv/config dist/main.js",
     "tsc": "./node_modules/typescript/bin/tsc",
