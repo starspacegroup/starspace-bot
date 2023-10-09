@@ -18,10 +18,11 @@
     "@tsconfig/node18": "^18.2.0",
     "discord.js": "^14.11.0",
     "dotenv": "^16.3.1",
+    "ffmpeg-static": "^5.2.0",
     "libsodium-wrappers": "^0.7.11",
     "mongodb": "^5.7.0",
-    "tsconfig": "^7.0.0",
-    "tsc": "^2.0.4"
+    "tsc": "^2.0.4",
+    "tsconfig": "^7.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.4.2",
