@@ -7,13 +7,15 @@
     "build": "rm -rf ./dist && npm run tsc",
     "dev": "tsx ./src/main.ts",
     "start": "node -r dotenv/config dist/main.js",
-    "tsc": "./node_modules/typescript/bin/tsc",
+    "tsc": "tsc",
     "postinstall": "npm run build"
   },
   "author": "davis9001",
   "license": "ISC",
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
+    "@ffmpeg/core": "^0.12.4",
+    "@ffmpeg/ffmpeg": "^0.12.7",
     "@hokify/agenda": "^6.3.0",
     "@tsconfig/node18": "^18.2.0",
     "discord.js": "^14.11.0",
