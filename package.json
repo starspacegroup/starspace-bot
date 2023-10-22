@@ -12,6 +12,9 @@
   },
   "author": "davis9001",
   "license": "ISC",
+  "engines": {
+    "node": "18.x"
+  },
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
     "@ffmpeg/core": "^0.12.4",
