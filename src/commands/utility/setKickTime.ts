@@ -1,6 +1,7 @@
 import log from "../../lib/logger"
 import mongoClient from "../../connections/mongoDb"
 import NumberSetting from "../../models/numberSetting"
+import { CommandReasonType } from "../../models/commandReasonTypes"
 import {
   CommandInteraction,
   PermissionFlagsBits,
@@ -17,13 +18,28 @@ export const setkicktime = {
         .setDescription("The number of seconds")
         .setRequired(true)
     )
+    .addStringOption((option) =>
+      option
+        .setName("reason")
+        .setDescription("The reason type")
+        .addChoices(
+          { name: "Camera", value: "Camera" },
+          { name: "Screenshare", value: "Screenshare" }
+        )
+        .setRequired(true)
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const seconds = interaction.options.getNumber("seconds")
+    const reason =
+      // @ts-ignore
+      interaction.options.getString("reason")
     await interaction.deferReply()
-    await updateKickTime(seconds, interaction).catch(async (err) => {
-      await interaction.editReply("Error updating userDisconnectSeconds.")
+    await updateKickTime(seconds, reason, interaction).catch(async (err) => {
+      await interaction.editReply(
+        `Error updating userDisconnectSeconds${reason}.`
+      )
       log(err)
     })
   },
@@ -31,6 +47,7 @@ export const setkicktime = {
 
 async function updateKickTime(
   seconds: number,
+  reason: CommandReasonType,
   interaction: CommandInteraction
 ) {
   try {
@@ -38,7 +55,7 @@ async function updateKickTime(
     // @ts-ignore
     const numberSettings = database.collection<NumberSetting>("numberSettings")
     const result = await numberSettings.updateOne(
-      { name: "userDisconnectSeconds" },
+      { name: `userDisconnectSeconds${reason}` },
       {
         $set: {
           value: seconds,
@@ -47,9 +64,11 @@ async function updateKickTime(
       { upsert: true }
     )
     log(
-      `Updated userDisconnectSeconds in mongoDB: ${result.modifiedCount} documents.`
+      `Updated userDisconnectSeconds${reason} in mongoDB: ${result.modifiedCount} documents.`
     )
-    interaction.editReply(`Updated userDisconnect to ${seconds} seconds.`)
+    interaction.editReply(
+      `Updated userDisconnectSeconds${reason} to ${seconds} seconds.`
+    )
   } catch (err) {
     if (err instanceof Error) {
       log(err.message)

@@ -3,7 +3,11 @@ dotenv.config()
 
 import log from "./lib/logger"
 import mongoClient, { getNumberSetting } from "./connections/mongoDb"
-import VoiceChannelEvent from "./models/voiceChannelEvent"
+import VoiceChannelEvent, {
+  VoiceChannelAction,
+} from "./models/voiceChannelEvent"
+import { CommandReasonType } from "./models/commandReasonTypes"
+
 import {
   Client,
   User,
@@ -22,6 +26,7 @@ import { ChangeStreamInsertDocument } from "mongodb"
 import { createReadStream } from "fs"
 import { join } from "path"
 import { warn } from "console"
+import NumberSetting, { NumberSettingType } from "./models/numberSetting"
 let voiceConnection: VoiceConnection | null
 let warningJobs: Job[] = []
 let kickJobs: Job[] = []
@@ -81,7 +86,10 @@ export const botScheduler = {
         switch (action) {
           case "join":
           case "cameraOff":
-            triggerWarning(user, channel)
+            triggerWarning(user, channel, action)
+            break
+          case "screenShared":
+            triggerWarning(user, channel, action)
             break
           case "leave":
             crisisAverted(user, `left ${channel.name}.`)
@@ -89,19 +97,42 @@ export const botScheduler = {
           case "cameraOn":
             crisisAverted(user, "turned on camera")
             break
+          case "screenUnshared":
+            crisisAverted(user, "unshared screen")
+            break
         }
       }
     })
   },
 }
-const triggerWarning = async (user: User, channel: VoiceBasedChannel) => {
-  const botJoinSeconds = await getNumberSetting("botJoinSeconds")
-  log(`Waiting ${botJoinSeconds} seconds for ${user.tag} to turn on camera.`)
+const triggerWarning = async (
+  user: User,
+  channel: VoiceBasedChannel,
+  action: VoiceChannelAction
+) => {
+  let desiredAction: string
+  let numberSetting: NumberSettingType
+  switch (action) {
+    case "cameraOff":
+      desiredAction = `turn on camera`
+      numberSetting = "botJoinSecondsCamera"
+      break
+    case "screenShared":
+      desiredAction = `stop screen sharing`
+      numberSetting = "botJoinSecondsScreenshare"
+      break
+    default:
+      desiredAction = `turn on camera`
+      numberSetting = "botJoinSecondsCamera"
+      break
+  }
+  const botJoinSeconds = await getNumberSetting(numberSetting)
+  log(`Waiting ${botJoinSeconds} seconds for ${user.tag} to ${desiredAction}.`)
   warningJobs[`warn-${user.id}`] = agenda.define(
     `warn-${user.id}`,
     async (job) => {
       log(`Joining on ${user.tag} in voice channel: ${channel.name}.`)
-      botDoWarning(channel, user)
+      botDoWarning(channel, user, action)
     }
   )
   await agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
@@ -115,8 +146,47 @@ const crisisAverted = async (user: User, action: string) => {
   }
 }
 
-const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
+const botDoWarning = async (
+  channel: VoiceBasedChannel,
+  member: User,
+  action: VoiceChannelAction
+) => {
   log("Doing bot warning.")
+  let numberSettingKickSeconds: NumberSettingType
+  let reason: CommandReasonType
+  switch (action) {
+    case "cameraOff":
+      numberSettingKickSeconds = "userDisconnectSecondsCamera"
+      reason = "Camera"
+      break
+    case "screenShared":
+      numberSettingKickSeconds = "userDisconnectSecondsScreenshare"
+      reason = "Screenshare"
+      break
+    default:
+      numberSettingKickSeconds = "userDisconnectSecondsCamera"
+      reason = "Camera"
+      break
+  }
+
+  const kickSeconds = await getNumberSetting(numberSettingKickSeconds)
+
+  let audioFile = ""
+  let desiredAction: string
+  switch (action) {
+    case "cameraOff":
+      desiredAction = "turn on camera"
+      audioFile = join(__dirname, "../camera_warning.mp3")
+      break
+    case "screenShared":
+      desiredAction = "stop screen sharing"
+      audioFile = join(__dirname, "../screenshare_warning.mp3")
+      break
+    default:
+      desiredAction = "turn on camera"
+      audioFile = join(__dirname, "../camera_warning.mp3")
+      break
+  }
   const guildMember = await channel.guild.members.fetch(member.id)
   if (voiceConnection) {
     await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
@@ -125,23 +195,23 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
     )
     return
   }
-  if (guildMember.voice.channel == null || guildMember.voice.selfVideo) {
-    // don't run when the user isn't in a voice channel or has cam on
+  if (
+    guildMember.voice.channel == null ||
+    (guildMember.voice.selfVideo && !guildMember.voice.streaming)
+  ) {
+    // don't run when the user isn't in a voice channel or has cam on and is not screen sharing
     return
   }
   const user = await discordClient.users.fetch(member)
 
   const player = createAudioPlayer()
-  let resource = createAudioResource(
-    createReadStream(join(__dirname, "../audio_1.mp3"))
-  )
+  let resource = createAudioResource(createReadStream(audioFile))
   if (resource.volume) {
     resource.volume.setVolume(0.5)
   }
 
-  const kickSeconds = await getNumberSetting("userDisconnectSeconds")
   channel.send(
-    `Hey ${member} please turn on your camera. Otherwise you will be disconnected in ${kickSeconds} seconds.`
+    `Hey ${user}, ${desiredAction}. I'm going to disconnect you in ${kickSeconds} seconds.`
   )
   voiceConnection = joinVoiceChannel({
     channelId: channel.id,
@@ -151,42 +221,46 @@ const botDoWarning = async (channel: VoiceBasedChannel, member: User) => {
   player.play(resource)
   voiceConnection.subscribe(player)
   log(
-    `Setting job to disconnect ${member.tag} in ${channel.name} in ${kickSeconds} seconds.`
+    `Disconnecting ${member.tag} in ${channel.name} in ${kickSeconds} seconds. Reason: ${reason}.`
   )
   kickJobs[`kick-${member.id}`] = agenda.define(
     `kick-${member.id}`,
     async (job) => {
-      log(`Disconnecting ${member.tag}.`)
-      disconnectUser(user, channel)
+      log(`Disconnecting ${member.tag}. Reason: ${reason}.`)
+      disconnectUser(user, channel, reason)
     }
   )
   await agenda.schedule(`${kickSeconds}s`, `kick-${member.id}`)
 }
 
-const disconnectUser = async (member: User, channel: VoiceBasedChannel) => {
+const disconnectUser = async (
+  member: User,
+  channel: VoiceBasedChannel,
+  reason: CommandReasonType
+) => {
   const guildMember = await channel.guild.members.fetch(member.id)
-  if (guildMember.voice.channel != null && guildMember.voice.selfVideo) {
+  if (
+    guildMember.voice.channel != null &&
+    guildMember.voice.selfVideo &&
+    !guildMember.voice.streaming
+  ) {
     log(
-      `Skipping disconnect of ${member.tag} because they're not in ${channel.name} or they turned on their camera.`
+      `Skipping disconnect of ${member.tag} because they're not in ${channel.name} or they turned on their camera / stopped screen share.`
     )
     return
   }
   try {
-    const disconnectSeconds = await getNumberSetting("userDisconnectSeconds")
-    const joinSeconds = await getNumberSetting("botJoinSeconds")
-    const seconds = disconnectSeconds + joinSeconds
-
-    channel.send(
-      `Disconnected ${member} for not turning on their camera in ${seconds} seconds.`
-    )
+    channel.send(`Disconnected ${member}: ${reason}.`)
 
     const guildMember = await channel.guild.members.fetch(member.id)
 
     if (guildMember) {
-      guildMember.voice.disconnect(`Camera not on for ${seconds}`)
+      guildMember.voice.disconnect(`${reason}`)
       guildMember.client.voice.client.destroy
     }
-    log(`User ${member.tag} disconnected.`)
+    log(
+      `User ${member.tag} disconnected from ${channel.name}. Reason: ${reason}.`
+    )
   } catch (error) {
     log(error)
   }

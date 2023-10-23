@@ -1,6 +1,7 @@
 import mongoClient from "../../connections/mongoDb"
 import log from "../../lib/logger"
 import NumberSetting from "../../models/numberSetting"
+import { CommandReasonType } from "../../models/commandReasonTypes"
 import {
   CommandInteraction,
   PermissionFlagsBits,
@@ -17,20 +18,36 @@ export const setwarntime = {
         .setDescription("The number of seconds")
         .setRequired(true)
     )
+    .addStringOption((option) =>
+      option
+        .setName("reason")
+        .setDescription("The reason type")
+        .addChoices(
+          { name: "Camera", value: "Camera" },
+          { name: "Screenshare", value: "Screenshare" }
+        )
+        .setRequired(true)
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const seconds = interaction.options.getNumber("seconds")
+    const reason =
+      // @ts-ignore
+      interaction.options.getString("reason")
     await interaction.deferReply()
-    await updateJoinTimeSeconds(seconds, interaction).catch(async (err) => {
-      await interaction.editReply("Error updating botJoinSeconds.")
-      log(err)
-    })
+    await updateJoinTimeSeconds(seconds, reason, interaction).catch(
+      async (err) => {
+        await interaction.editReply(`Error updating botJoinSeconds${reason}.`)
+        log(err)
+      }
+    )
   },
 }
 
 async function updateJoinTimeSeconds(
   seconds: number,
+  reason: CommandReasonType,
   interaction: CommandInteraction
 ) {
   try {
@@ -38,7 +55,7 @@ async function updateJoinTimeSeconds(
     // @ts-ignore
     const numberSettings = database.collection<NumberSetting>("numberSettings")
     const result = await numberSettings.updateOne(
-      { name: "botJoinSeconds" },
+      { name: `botJoinSeconds${reason}` },
       {
         $set: {
           value: seconds,
@@ -46,8 +63,12 @@ async function updateJoinTimeSeconds(
       },
       { upsert: true }
     )
-    log(`Updated botJoinSeconds in mongoDB: ${result.modifiedCount} documents.`)
-    interaction.editReply(`Updated botJoinSeconds to ${seconds} seconds.`)
+    log(
+      `Updated botJoinSeconds${reason} in mongoDB: ${result.modifiedCount} documents.`
+    )
+    interaction.editReply(
+      `Updated botJoinSeconds${reason} to ${seconds} seconds.`
+    )
   } catch (err) {
     if (err instanceof Error) {
       log(err.message)

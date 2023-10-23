@@ -1,6 +1,7 @@
 import mongoClient from "../../connections/mongoDb"
 import log from "../../lib/logger"
 import NumberSetting from "../../models/numberSetting"
+import { CommandReasonType } from "../../models/commandReasonTypes"
 import {
   CommandInteraction,
   PermissionFlagsBits,
@@ -19,12 +20,25 @@ export const settimeoutminutes = {
         .setDescription("The number of minutes")
         .setRequired(true)
     )
+    .addStringOption((option) =>
+      option
+        .setName("reason")
+        .setDescription("The reason type")
+        .addChoices(
+          { name: "Camera", value: "Camera" },
+          { name: "Screenshare", value: "Screenshare" }
+        )
+        .setRequired(true)
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const minutes = interaction.options.getNumber("minutes")
+    const reason =
+      // @ts-ignore
+      interaction.options.getString("reason")
     await interaction.deferReply()
-    await updateTimeouteLengthMinutes(minutes, interaction).catch(
+    await updateTimeouteLengthMinutes(minutes, reason, interaction).catch(
       async (err) => {
         await interaction.editReply("Error updating timeoutLengthMinutes.")
         log(err)
@@ -35,6 +49,7 @@ export const settimeoutminutes = {
 
 async function updateTimeouteLengthMinutes(
   minutes: number,
+  reason: CommandReasonType,
   interaction: CommandInteraction
 ) {
   try {
@@ -42,7 +57,7 @@ async function updateTimeouteLengthMinutes(
     // @ts-ignore
     const numberSettings = database.collection<NumberSetting>("numberSettings")
     const result = await numberSettings.updateOne(
-      { name: "timeoutLengthMinutes" },
+      { name: `timeoutLengthMinutes${reason}` },
       {
         $set: {
           value: minutes,
@@ -51,9 +66,11 @@ async function updateTimeouteLengthMinutes(
       { upsert: true }
     )
     log(
-      `Updated timeoutLengthMinutes in mongoDB: ${result.modifiedCount} documents.`
+      `Updated timeoutLengthMinutes${reason} in mongoDB: ${result.modifiedCount} documents.`
     )
-    interaction.editReply(`Updated timeoutLengthMinutes to ${minutes} minutes.`)
+    interaction.editReply(
+      `Updated timeoutLengthMinutes${reason} to ${minutes} minutes.`
+    )
   } catch (err) {
     if (err instanceof Error) {
       log(err.message)

@@ -9,7 +9,11 @@ export default class NumberSetting {
 }
 
 export type NumberSettingType =
-  | "botJoinSeconds" // warn time
-  | "userDisconnectSeconds" // kick time
-  | "userTimeoutAfterXInfractions" // timeout
-  | "timeoutLengthMinutes" // timeout minutes
+  | "botJoinSecondsCamera" // camera warn time
+  | "botJoinSecondsScreenshare" // screenshare warn time
+  | "userDisconnectSecondsCamera" // camera kick time
+  | "userDisconnectSecondsScreenshare" // screenshare kick time
+  | "userTimeoutAfterXInfractionsCamera" // camera timeout
+  | "userTimeoutAfterXInfractionsScreenshare" // screenshare timeout
+  | "timeoutLengthMinutesCamera" // camera timeout minutes
+  | "timeoutLengthMinutesScreenshare" // screenshare timeout minutes
