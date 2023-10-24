@@ -63,11 +63,11 @@ export const botScheduler = {
     })
 
     changeStream.on("change", async (change) => {
-      const channelID = change.fullDocument.channelId
-      const memberID = change.fullDocument.memberId
-      const user = await discordClient.users.fetch(memberID)
+      const channelId = change.fullDocument.channelId
+      const memberId = change.fullDocument.memberId
+      const user = await discordClient.users.fetch(memberId)
       const botUser = discordClient?.user?.id
-      const channel = discordClient.channels.cache.get(channelID)
+      const channel = discordClient.channels.cache.get(channelId)
       const action = change.fullDocument.action
 
       if (user && channel?.isVoiceBased() && botUser) {
