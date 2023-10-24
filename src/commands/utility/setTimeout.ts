@@ -42,7 +42,7 @@ export const settimeout = {
       interaction
     ).catch(async (err) => {
       await interaction.editReply(
-        "Error updating userTimeoutAfterXInfractions."
+        `Error updating userTimeoutAfterXInfractions${reason}.`
       )
       log(err)
     })
