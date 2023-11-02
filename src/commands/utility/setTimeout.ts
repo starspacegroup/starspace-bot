@@ -63,6 +63,7 @@ async function updateTimeoutAfterXInfractions(
       {
         $set: {
           value: infractions,
+          guildId: interaction.guildId || "",
         },
       },
       { upsert: true }

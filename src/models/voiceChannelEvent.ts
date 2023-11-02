@@ -2,6 +2,7 @@ import { ObjectId } from "mongodb"
 
 export default class VoiceChannelEvent {
   constructor(
+    public guildId: string,
     public memberId: string,
     public memberName: string,
     public channelId: string,

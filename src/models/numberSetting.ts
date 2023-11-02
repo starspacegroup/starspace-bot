@@ -4,6 +4,7 @@ export default class NumberSetting {
   constructor(
     public name: NumberSettingType,
     public value: number,
+    public guildId: string,
     public id?: ObjectId
   ) {}
 }

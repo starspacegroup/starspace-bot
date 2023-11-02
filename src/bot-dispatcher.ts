@@ -126,7 +126,7 @@ const triggerWarning = async (
       numberSetting = "botJoinSecondsCamera"
       break
   }
-  const botJoinSeconds = await getNumberSetting(numberSetting)
+  const botJoinSeconds = await getNumberSetting(numberSetting, channel.guildId)
   log(`Waiting ${botJoinSeconds} seconds for ${user.tag} to ${desiredAction}.`)
   warningJobs[`warn-${user.id}`] = agenda.define(
     `warn-${user.id}`,
@@ -169,7 +169,10 @@ const botDoWarning = async (
       break
   }
 
-  const kickSeconds = await getNumberSetting(numberSettingKickSeconds)
+  const kickSeconds = await getNumberSetting(
+    numberSettingKickSeconds,
+    channel.guildId
+  )
 
   let audioFile = ""
   let desiredAction: string

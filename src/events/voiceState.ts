@@ -191,6 +191,7 @@ const screenUnshared = (
 export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   const member = newState.member
   const userName = member?.user.tag
+  const guildId = newState.guild.id
 
   if (!member) {
     return
@@ -202,12 +203,12 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   }
   if (memberJoined(member, oldState, newState) && newState.channel) {
     log(`${userName} joined ${newState.channel?.name}.`)
-    insertVoiceChannelEvent(member, newState.channel, "join")
+    insertVoiceChannelEvent(guildId, member, newState.channel, "join")
   }
 
   if (memberLeft(member, oldState, newState) && oldState.channel) {
     log(`${userName} left ${oldState.channel?.name}.`)
-    insertVoiceChannelEvent(member, oldState.channel, "leave")
+    insertVoiceChannelEvent(guildId, member, oldState.channel, "leave")
   }
 
   if (
@@ -218,27 +219,27 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
     log(
       `${userName} moved from ${oldState.channel?.name} to ${newState.channel?.name}.`
     )
-    insertVoiceChannelEvent(member, oldState.channel, "leave")
-    insertVoiceChannelEvent(member, newState.channel, "join")
+    insertVoiceChannelEvent(guildId, member, oldState.channel, "leave")
+    insertVoiceChannelEvent(guildId, member, newState.channel, "join")
   }
 
   if (cameraDisabled(member, oldState, newState) && newState.channel) {
     log(`${userName} camera disabled.`)
-    insertVoiceChannelEvent(member, newState.channel, "cameraOff")
+    insertVoiceChannelEvent(guildId, member, newState.channel, "cameraOff")
   }
 
   if (cameraEnabled(member, oldState, newState) && newState.channel) {
     log(`${userName} camera enabled.`)
-    insertVoiceChannelEvent(member, newState.channel, "cameraOn")
+    insertVoiceChannelEvent(guildId, member, newState.channel, "cameraOn")
   }
 
   if (screenShared(member, oldState, newState) && newState.channel) {
     log(`${userName} screen shared.`)
-    insertVoiceChannelEvent(member, newState.channel, "screenShared")
+    insertVoiceChannelEvent(guildId, member, newState.channel, "screenShared")
   }
 
   if (screenUnshared(member, oldState, newState) && newState.channel) {
     log(`${userName} screen unshared.`)
-    insertVoiceChannelEvent(member, newState.channel, "screenUnshared")
+    insertVoiceChannelEvent(guildId, member, newState.channel, "screenUnshared")
   }
 }

@@ -59,6 +59,7 @@ async function updateJoinTimeSeconds(
       {
         $set: {
           value: seconds,
+          guildId: interaction.guildId || "",
         },
       },
       { upsert: true }

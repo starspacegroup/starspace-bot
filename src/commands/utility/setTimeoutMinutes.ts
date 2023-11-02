@@ -61,6 +61,7 @@ async function updateTimeouteLengthMinutes(
       {
         $set: {
           value: minutes,
+          guildId: interaction.guildId || "",
         },
       },
       { upsert: true }

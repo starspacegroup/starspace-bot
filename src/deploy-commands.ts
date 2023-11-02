@@ -11,6 +11,7 @@ import log from "./lib/logger"
 
 const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
+const guildId2 = process.env.DISCORD_GUILD_ID_2
 const token = process.env.DISCORD_BOT_TOKEN
 
 // const commands: string[] = []
@@ -58,10 +59,26 @@ const rest = new REST().setToken(token)
   try {
     log(`Started refreshing ${commands.length} application (/) commands.`)
 
-    // The put method is used to fully refresh all commands in the guild with the current set
     const data = await rest.put(
       // @ts-ignore
       Routes.applicationGuildCommands(clientId, guildId),
+      { body: commands }
+    )
+
+    log(
+      // @ts-ignore
+      `Successfully reloaded ${data.length} application (/) commands.`
+    )
+  } catch (error) {
+    // And of course, make sure you catch and log any errors!
+    console.error(error)
+  }
+  try {
+    log(`Started refreshing ${commands.length} application (/) commands.`)
+
+    const data = await rest.put(
+      // @ts-ignore
+      Routes.applicationGuildCommands(clientId, guildId2),
       { body: commands }
     )
 

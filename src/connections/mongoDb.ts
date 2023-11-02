@@ -19,6 +19,7 @@ const mongoClient = new MongoClient(uri, {
 })
 
 export const insertVoiceChannelEvent = async (
+  guildId: string,
   member: GuildMember,
   channel: VoiceBasedChannel,
   action: VoiceChannelAction
@@ -28,6 +29,7 @@ export const insertVoiceChannelEvent = async (
     database.collection<VoiceChannelEvent>("voiceChannelEvent")
 
   const result = await voiceChannelEvent.insertOne({
+    guildId: guildId,
     memberId: member.id,
     memberName: member.user.username,
     channelId: channel.id,
@@ -38,11 +40,14 @@ export const insertVoiceChannelEvent = async (
   // log(`A document was inserted with the _id: ${result.insertedId}`)
 }
 
-export const getNumberSetting = async (settingName: NumberSettingType) => {
+export const getNumberSetting = async (
+  settingName: NumberSettingType,
+  guildId: string
+) => {
   const database = mongoClient.db("camera_on")
   const result = await database
     .collection<NumberSetting>("numberSettings")
-    .findOne({ name: settingName })
+    .findOne({ name: settingName, guildId: guildId })
   return result ? result.value : 0
 }
 
