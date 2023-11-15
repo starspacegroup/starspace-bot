@@ -7,11 +7,13 @@ import { setwarntime } from "./commands/utility/setWarnTime"
 import { setkicktime } from "./commands/utility/setKickTime"
 import { settimeout } from "./commands/utility/setTimeout"
 import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
+import { insult } from "./commands/text/insult"
 import log from "./lib/logger"
 
 const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
 const guildId2 = process.env.DISCORD_GUILD_ID_2
+const guildId3 = process.env.DISCORD_GUILD_ID_3
 const token = process.env.DISCORD_BOT_TOKEN
 
 // const commands: string[] = []
@@ -20,9 +22,13 @@ const token = process.env.DISCORD_BOT_TOKEN
 // const commandFolders = fs.readdirSync(foldersPath)
 
 // const commands = { setwarntime, setkicktime, settimeout, settimeoutminutes }
-const commands = [setwarntime, setkicktime, settimeout, settimeoutminutes].map(
-  (command) => command.command.toJSON()
-)
+const commands = [
+  setwarntime,
+  setkicktime,
+  settimeout,
+  settimeoutminutes,
+  insult,
+].map((command) => command.command.toJSON())
 
 // for (const command of commands) {
 //   // @ts-ignore
@@ -79,6 +85,23 @@ const rest = new REST().setToken(token)
     const data = await rest.put(
       // @ts-ignore
       Routes.applicationGuildCommands(clientId, guildId2),
+      { body: commands }
+    )
+
+    log(
+      // @ts-ignore
+      `Successfully reloaded ${data.length} application (/) commands.`
+    )
+  } catch (error) {
+    // And of course, make sure you catch and log any errors!
+    console.error(error)
+  }
+  try {
+    log(`Started refreshing ${commands.length} application (/) commands.`)
+
+    const data = await rest.put(
+      // @ts-ignore
+      Routes.applicationGuildCommands(clientId, guildId3),
       { body: commands }
     )
 

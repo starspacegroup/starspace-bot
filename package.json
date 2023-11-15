@@ -9,7 +9,7 @@
     "start": "node -r dotenv/config dist/main.js",
     "tsc": "tsc",
     "postinstall": "npm run build",
-    "deployCommands": "node -r dotenv/config dist/deploy-commands.js"
+    "deployCommands": "yarn build && node -r dotenv/config dist/deploy-commands.js"
   },
   "author": "davis9001",
   "license": "ISC",

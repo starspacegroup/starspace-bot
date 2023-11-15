@@ -6,6 +6,7 @@ import { setwarntime } from "./commands/utility/setWarnTime"
 import { setkicktime } from "./commands/utility/setKickTime"
 import { settimeout } from "./commands/utility/setTimeout"
 import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
+import { insult } from "./commands/text/insult"
 import { botScheduler } from "./bot-dispatcher"
 
 botScheduler.run()
@@ -23,6 +24,7 @@ const commands = {
   setkicktime,
   settimeout,
   settimeoutminutes,
+  insult,
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {
