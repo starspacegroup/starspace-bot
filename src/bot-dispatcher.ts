@@ -277,12 +277,14 @@ const cancelJobs = async (member: string) => {
     delete warningJobs[warnJobTitle]
     const jobs = await agenda.jobs({ name: warnJobTitle })
     jobs.forEach((job) => job.disable())
+    jobs.forEach((job) => job.cancel())
     jobs.forEach((job) => job.save())
   }
   if (kickJobTitle in kickJobs) {
     delete kickJobs[kickJobTitle]
     const jobs = await agenda.jobs({ name: kickJobTitle })
     jobs.forEach((job) => job.disable())
+    jobs.forEach((job) => job.cancel())
     jobs.forEach((job) => job.save())
   }
 }
