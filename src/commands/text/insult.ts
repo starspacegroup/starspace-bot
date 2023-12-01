@@ -15,11 +15,11 @@ export const insult = {
     .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
-    const user = interaction.options.getUser("user")
+    const user = interaction.options.getUser("user") ?? interaction.user
     // Get random Insult:
     const randomInsult = Insults[Math.floor(Math.random() * Insults.length)]
     await interaction.reply(`${user} ${randomInsult}.`)
-    log(`${user?.username} has been insulted.`)
+    log(`${user.tag} has been insulted in ${interaction.guild?.name}.`)
   },
 }
 
@@ -42,7 +42,7 @@ let Insults = [
 
 //thoughtcatalog.com/january-nelson/2021/01/best-insults/
 https: Insults.push.apply(Insults, [
-  `I was today years old when I realized I didn’t like you. Someday you’ll go far. And I really hope you stay there. Oops, my bad. I could’ve sworn I was dealing with an adult. I love what you’ve done with your hair. How do you get it to come out of your nostrils like that? Remember that time you were saying that thing I didn’t care about? Yeah, that is now.`,
+  `I was today years old when I realized I didn’t like you. Someday you’ll go far. And I really hope you stay there. Oops, my bad. I could’ve sworn I was dealing with an adult. I love what you’ve done with your hair. How do you get it to come out of your nostrils like that? Remember that time you were saying that thing I didn’t care about? Yeah, that is now. You're a moldy freak.`,
   `You’re the reason God created the middle finger. I’m busy right now, can I ignore you another time? Oh, you don’t like being treated the way you treat me? That must suck. I wish I had a flip phone, so I could slam it shut on this conversation. N’Sync said it best, “BYE, BYE, BYE!” I’ve been called worse things by better men.`,
   `You’re a gray sprinkle on a rainbow cupcake. Your secrets are always safe with me. I never even listen when you tell me them. You bring everyone so much joy! You know, when you leave the room. But, still. How many licks until I get to the interesting part of this conversation? Keep rolling your eyes, you might eventually find a brain. Your face makes onions cry. Did I invite you to the barbecue? Then why are you all up in my grill?`,
   `Our kid must have gotten his brain from you! I still have mine. You have so many gaps in your teeth it looks like your tongue is in jail. If your brain was dynamite, there wouldn’t be enough to blow your hat off. You are more disappointing than an unsalted pretzel. It’s impossible to underestimate you.`,
@@ -50,7 +50,8 @@ https: Insults.push.apply(Insults, [
   `I may love to shop but I will never buy your bull. Child, I’ve forgotten more than you ever knew. I’m an acquired taste. If you don’t like me, acquire some taste. Bye. Hope to see you never. Don’t worry, the first 40 years of childhood are always the hardest. If you’re going to be two-faced, at least make one of them pretty. If you have a problem with me, write the problem on a piece of paper, fold it, and shove it up your ass.`,
   `Complete this sentence for me: “I never want to see you ————!” I thought of you today. It reminded me to take out the trash. You bring everyone so much joy when you leave the room. Did the mental hospital test too many drugs on you today? OH MY GOD! IT SPEAKS! Beauty is only skin deep, but ugly goes clean to the bone. I’d like to help you out. Which way did you come in?`,
   `I forgot the world revolves around you. My apologies, how silly of me.Light travels faster than sound which is why you seemed bright until you spoke.I’d rather treat my baby’s diaper rash than have lunch with you. You look so pretty. Not at all gross, today.I only take you everywhere I go, so I don’t have to kiss you goodbye.We were happily married for one month, but unfortunately, we’ve been married for 10 years.When you look in the mirror, say hi to the clown you see in there for me, would you?`,
-  `Somewhere out there is a tree tirelessly producing oxygen for you. You owe it an apology. That sounds like a you problem. You have miles to go before you reach mediocre. I see no evil, and I definitely don’t hear your evil. I’m just glad that you’re stringing words into sentences now. Don’t worry about me. Worry about your eyebrows. Mirrors can’t talk. Lucky for you, they can’t laugh, either. You just might be why the middle finger was invented in the first place.`,
+  `Somewhere out there is a tree tirelessly producing oxygen for you. You owe it an apology. You have miles to go before you reach mediocre. I’m just glad that you’re stringing words into sentences now.`,
+  `Don’t worry about me. Worry about your eyebrows. Mirrors can’t talk. Lucky for you, they can’t laugh, either. You just might be why the middle finger was invented in the first place.`,
   `You are proof God has a sense of humor. If I had a face like yours, I would sue my parents. You must have been born on a highway. That’s where most accidents happen. Grab a straw, because you suck. You’re the reason the gene pool needs a lifeguard. If laughter is the best medicine, your face must be curing the world.`,
   `I’m glad to see you’re not letting education get in the way of your ignorance. If I wanted to kill myself, I would climb to your ego and jump to your IQ. I’d agree with you but then we’d both be wrong. Your only chance of getting laid is to crawl up a chicken butt and wait. Comebacks to use on your best friends and family`,
   `Don’t be ashamed of who you are. That’s your parent’s job. I told my therapist about you. Take my lowest priority and put yourself beneath it. If you were an inanimate object, you’d be a participation trophy. Hey, you have something on your chin. No, the 3rd one down. I hope your wife brings a date to your funeral.`,

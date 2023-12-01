@@ -1,10 +1,11 @@
-import { Events } from "discord.js"
+import { PermissionFlagsBits } from "discord.js"
 import log from "../lib/logger"
 
-module.exports = {
-  name: Events.ClientReady,
-  once: true,
-  execute(client) {
-    log(`Ready! Logged in as ${client.user.tag}`)
-  },
+export function readyEvent(client) {
+  log(`Ready! Logged in as ${client.user?.tag}`)
+  log(`Connected to ${client.guilds.cache.size} guilds.`)
+
+  client.guilds.cache.forEach((guild) => {
+    log(`Connected to ${guild.name} (${guild.id})`)
+  })
 }

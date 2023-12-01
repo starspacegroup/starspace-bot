@@ -1,7 +1,13 @@
-import { Client, Events, GatewayIntentBits } from "discord.js"
+import {
+  Client,
+  Events,
+  GatewayIntentBits,
+  PermissionFlagsBits,
+} from "discord.js"
 import * as dotenv from "dotenv"
 dotenv.config()
 import { voiceStateEvent } from "./events/voiceState"
+import { readyEvent } from "./events/ready"
 import { setwarntime } from "./commands/utility/setWarnTime"
 import { setkicktime } from "./commands/utility/setKickTime"
 import { settimeout } from "./commands/utility/setTimeout"
@@ -17,6 +23,7 @@ const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 })
 
+client.on("ready", readyEvent)
 client.on("voiceStateUpdate", voiceStateEvent)
 
 const commands = {

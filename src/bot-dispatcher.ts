@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv"
 dotenv.config()
 
-import log from "./lib/logger"
+import log, { lerror } from "./lib/logger"
 import mongoClient, { getNumberSetting } from "./connections/mongoDb"
 import VoiceChannelEvent, {
   VoiceChannelAction,
@@ -14,9 +14,11 @@ import {
   GatewayIntentBits,
   VoiceBasedChannel,
   PermissionsBitField,
+  Guild,
+  GuildMember,
 } from "discord.js"
 import { createAudioPlayer } from "@discordjs/voice"
-import { Agenda, Job } from "@hokify/agenda"
+import { Agenda } from "@hokify/agenda"
 import {
   createAudioResource,
   joinVoiceChannel,
@@ -25,13 +27,8 @@ import {
 import { ChangeStreamInsertDocument } from "mongodb"
 import { createReadStream } from "fs"
 import { join } from "path"
-import { warn } from "console"
-import NumberSetting, { NumberSettingType } from "./models/numberSetting"
+import { NumberSettingType } from "./models/numberSetting"
 let voiceConnection: VoiceConnection | null
-let warningJobs: Job[] = []
-let kickJobs: Job[] = []
-// var warningJobs: { [key: string]: Job }
-// var kickJobs: { [key: string]: Job }
 const botToken = process.env.DISCORD_BOT_TOKEN
 
 const database = mongoClient.db("camera_on")
@@ -49,6 +46,44 @@ const discordClient = new Client({
 })
 discordClient.login(botToken)
 
+agenda.define("warn member", async (job) => {
+  const guild = discordClient.guilds.cache.get(job.attrs.data.guildId)
+  const channel = await discordClient.channels.fetch(job.attrs.data.channelId)
+  const member = guild?.members.cache.get(job.attrs.data.memberId)
+  const voiceChannel = channel?.isVoiceBased() ? channel : null
+  if (!member || !voiceChannel || !guild) {
+    const message = `Couldn't find either guild (${guild}), voiceChannel (${voiceChannel}), and/or member (${member}).`
+    job.fail(`${message}`)
+    lerror(`${message}`)
+    return
+  }
+  try {
+    await botDoWarning(
+      guild,
+      voiceChannel,
+      member,
+      job.attrs.data.desiredAction
+    )
+  } catch (error) {
+    job.fail(`${error}`)
+    lerror(`${error}`)
+  }
+})
+
+agenda.define("disconnect member", async (job) => {
+  const guild = discordClient.guilds.cache.get(job.attrs.data.guildId)
+  const channel = await discordClient.channels.fetch(job.attrs.data.channelId)
+  const member = guild?.members.cache.get(job.attrs.data.memberId)
+  const voiceChannel = channel?.isVoiceBased() ? channel : null
+  if (!guild || !voiceChannel || !member) return
+  await disconnectMember(
+    guild,
+    voiceChannel,
+    member,
+    job.attrs.data.desiredAction
+  )
+})
+
 export const botScheduler = {
   async run() {
     await agenda.start()
@@ -65,12 +100,13 @@ export const botScheduler = {
     changeStream.on("change", async (change) => {
       const channelId = change.fullDocument.channelId
       const memberId = change.fullDocument.memberId
-      const user = await discordClient.users.fetch(memberId)
       const botUser = discordClient?.user?.id
       const channel = discordClient.channels.cache.get(channelId)
+      const guild = discordClient.guilds.cache.get(change.fullDocument.guildId)
+      const member = await guild?.members.fetch(memberId)
       const action = change.fullDocument.action
 
-      if (user && channel?.isVoiceBased() && botUser) {
+      if (member && channel?.isVoiceBased() && botUser && guild) {
         const botGuildMember = await channel?.guild.members.fetch(botUser)
         if (
           !channel
@@ -86,19 +122,19 @@ export const botScheduler = {
         switch (action) {
           case "join":
           case "cameraOff":
-            triggerWarning(user, channel, action)
+            triggerWarning(guild, channel, member, action)
             break
           case "screenShared":
-            triggerWarning(user, channel, action)
+            triggerWarning(guild, channel, member, action)
             break
           case "leave":
-            crisisAverted(user, `left ${channel.name}.`)
+            crisisAverted(guild, channel, member, "leave voice channel")
             break
           case "cameraOn":
-            crisisAverted(user, "turned on camera")
+            crisisAverted(guild, channel, member, "turn on camera")
             break
           case "screenUnshared":
-            crisisAverted(user, "unshared screen")
+            crisisAverted(guild, channel, member, "turn off screen share")
             break
         }
       }
@@ -106,13 +142,15 @@ export const botScheduler = {
   },
 }
 const triggerWarning = async (
-  user: User,
+  guild: Guild,
   channel: VoiceBasedChannel,
+  member: GuildMember,
   action: VoiceChannelAction
 ) => {
   let desiredAction: string
   let numberSetting: NumberSettingType
   switch (action) {
+    case "join":
     case "cameraOff":
       desiredAction = `turn on camera`
       numberSetting = "botJoinSecondsCamera"
@@ -126,20 +164,30 @@ const triggerWarning = async (
       numberSetting = "botJoinSecondsCamera"
       break
   }
-  const botJoinSeconds = await getNumberSetting(numberSetting, channel.guildId)
-  log(`Waiting ${botJoinSeconds} seconds for ${user.tag} to ${desiredAction}.`)
-  warningJobs[`warn-${user.id}`] = agenda.define(
-    `warn-${user.id}`,
-    async (job) => {
-      log(`Joining on ${user.tag} in voice channel: ${channel.name}.`)
-      botDoWarning(channel, user, action)
-    }
+  const botJoinSeconds = await getNumberSetting(numberSetting, guild.id)
+  log(
+    `Waiting ${botJoinSeconds} seconds for ${member.user.tag} to ${desiredAction}.`
   )
-  await agenda.schedule(`${botJoinSeconds}s`, `warn-${user.id}`)
+
+  scheduleJob(
+    "warn member",
+    botJoinSeconds,
+    guild,
+    channel,
+    member,
+    desiredAction
+  )
 }
-const crisisAverted = async (user: User, action: string) => {
-  log(`User ${user.tag} ${action}, cancelling any pending warnings/kicks.`)
-  cancelJobs(user.id)
+const crisisAverted = async (
+  guild: Guild,
+  voiceChannel: VoiceBasedChannel,
+  member: GuildMember,
+  desiredAction: string
+) => {
+  log(
+    `User ${member.user.tag} did ${desiredAction}, cancelling any pending warnings/kicks.`
+  )
+  await cancelJobs(guild, voiceChannel, member, desiredAction)
   if (voiceConnection) {
     voiceConnection.disconnect()
     voiceConnection = null
@@ -147,19 +195,20 @@ const crisisAverted = async (user: User, action: string) => {
 }
 
 const botDoWarning = async (
-  channel: VoiceBasedChannel,
-  member: User,
-  action: VoiceChannelAction
+  guild: Guild,
+  voiceChannel: VoiceBasedChannel,
+  member: GuildMember,
+  desiredAction: string
 ) => {
   log("Doing bot warning.")
   let numberSettingKickSeconds: NumberSettingType
   let reason: CommandReasonType
-  switch (action) {
-    case "cameraOff":
+  switch (desiredAction) {
+    case "turn on camera":
       numberSettingKickSeconds = "userDisconnectSecondsCamera"
       reason = "Camera"
       break
-    case "screenShared":
+    case "stop screen sharing":
       numberSettingKickSeconds = "userDisconnectSecondsScreenshare"
       reason = "Screenshare"
       break
@@ -169,32 +218,26 @@ const botDoWarning = async (
       break
   }
 
-  const kickSeconds = await getNumberSetting(
-    numberSettingKickSeconds,
-    channel.guildId
-  )
+  const kickSeconds = await getNumberSetting(numberSettingKickSeconds, guild.id)
 
   let audioFile = ""
-  let desiredAction: string
-  switch (action) {
-    case "cameraOff":
-      desiredAction = "turn on camera"
+  switch (desiredAction) {
+    case "turn on camera":
       audioFile = join(__dirname, "../camera_warning.mp3")
       break
-    case "screenShared":
-      desiredAction = "stop screen sharing"
+    case "stop screen sharing":
       audioFile = join(__dirname, "../screenshare_warning.mp3")
       break
     default:
-      desiredAction = "turn on camera"
       audioFile = join(__dirname, "../camera_warning.mp3")
       break
   }
-  const guildMember = await channel.guild.members.fetch(member.id)
+  const guildMember = await guild.members.fetch(member.id)
   if (voiceConnection) {
-    await agenda.schedule(`in 5 seconds`, `warn-${member.id}`)
+    await cancelJobs(guild, voiceChannel, member, desiredAction)
+    scheduleJob("warn member", 5, guild, voiceChannel, member, desiredAction)
     log(
-      `Scheduled retry to join on ${member.tag} in voice channel: ${channel.name}.`
+      `Scheduled retry to join on ${member.user.tag} in voice channel: ${voiceChannel.name}.`
     )
     return
   }
@@ -213,78 +256,112 @@ const botDoWarning = async (
     resource.volume.setVolume(0.5)
   }
 
-  channel.send(
+  voiceChannel.send(
     `Hey ${user}, ${desiredAction}. I'm going to disconnect you in ${kickSeconds} seconds.`
   )
   voiceConnection = joinVoiceChannel({
-    channelId: channel.id,
-    guildId: channel.guild.id,
-    adapterCreator: channel.guild.voiceAdapterCreator,
+    guildId: voiceChannel.guild.id,
+    channelId: voiceChannel.id,
+    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
   })
   player.play(resource)
   voiceConnection.subscribe(player)
   log(
-    `Disconnecting ${member.tag} in ${channel.name} in ${kickSeconds} seconds. Reason: ${reason}.`
+    `Disconnecting ${member.user.tag} in ${voiceChannel.name} in ${kickSeconds} seconds. Reason: ${reason}.`
   )
-  kickJobs[`kick-${member.id}`] = agenda.define(
-    `kick-${member.id}`,
-    async (job) => {
-      log(`Disconnecting ${member.tag}. Reason: ${reason}.`)
-      disconnectUser(user, channel, reason)
-    }
+  scheduleJob(
+    "disconnect member",
+    kickSeconds,
+    guild,
+    voiceChannel,
+    member,
+    desiredAction
   )
-  await agenda.schedule(`${kickSeconds}s`, `kick-${member.id}`)
 }
 
-const disconnectUser = async (
-  member: User,
-  channel: VoiceBasedChannel,
-  reason: CommandReasonType
+const disconnectMember = async (
+  guild: Guild,
+  voiceChannel: VoiceBasedChannel,
+  member: GuildMember,
+  reason: VoiceChannelAction
 ) => {
-  const guildMember = await channel.guild.members.fetch(member.id)
+  if (!guild || !voiceChannel || !member) {
+    lerror(
+      `Couldn't find either guild (${guild}), voiceChannel (${voiceChannel}), and/or member (${member}).`
+    )
+    return
+  }
+  const guildMember = await guild.members.fetch(member.id)
   if (
     guildMember.voice.channel != null &&
     guildMember.voice.selfVideo &&
     !guildMember.voice.streaming
   ) {
     log(
-      `Skipping disconnect of ${member.tag} because they're not in ${channel.name} or they turned on their camera / stopped screen share.`
+      `Skipping disconnect of ${member.user.tag} because they're not in ${voiceChannel.name} or they turned on their camera / stopped screen share.`
     )
     return
   }
   try {
-    channel.send(`Disconnected ${member}: ${reason}.`)
+    voiceChannel.send(`Disconnected ${member}: ${reason}.`)
 
-    const guildMember = await channel.guild.members.fetch(member.id)
+    const guildMember = await voiceChannel.guild.members.fetch(member.id)
 
     if (guildMember) {
       guildMember.voice.disconnect(`${reason}`)
       guildMember.client.voice.client.destroy
     }
     log(
-      `User ${member.tag} disconnected from ${channel.name}. Reason: ${reason}.`
+      `User ${member.user.tag} disconnected from ${voiceChannel.name}. Reason: ${reason}.`
     )
   } catch (error) {
     log(error)
   }
 }
 
-const cancelJobs = async (member: string) => {
-  const warnJobTitle = `warn-${member}`
-  const kickJobTitle = `kick-${member}`
+const cancelJobs = async (
+  guild: Guild,
+  channel: VoiceBasedChannel,
+  member: GuildMember,
+  desiredAction: string
+) => {
+  const numJobsRemoved = await agenda.cancel({
+    name: "warn member",
+    "data.guildId": guild.id,
+    "data.channelId": channel.id,
+    "data.memberId": member.id,
+    "data.desiredAction": desiredAction,
+  })
+  log(
+    `Removed ${numJobsRemoved} jobs for ${member.user.tag} in ${channel.name}.`
+  )
+}
 
-  if (warnJobTitle in warningJobs) {
-    delete warningJobs[warnJobTitle]
-    const jobs = await agenda.jobs({ name: warnJobTitle })
-    jobs.forEach((job) => job.disable())
-    jobs.forEach((job) => job.cancel())
-    jobs.forEach((job) => job.save())
+interface JobAttributes {
+  name: string
+  memberId: string
+  channelId: string
+  guildId: string
+  desiredAction: string
+}
+
+async function scheduleJob(
+  name: string,
+  delayInSeconds: number,
+  guild: Guild,
+  channel: VoiceBasedChannel,
+  member: GuildMember,
+  desiredAction: string
+) {
+  const jobAttributes: JobAttributes = {
+    name: name,
+    memberId: member.id,
+    channelId: channel.id,
+    guildId: guild.id,
+    desiredAction: desiredAction,
   }
-  if (kickJobTitle in kickJobs) {
-    delete kickJobs[kickJobTitle]
-    const jobs = await agenda.jobs({ name: kickJobTitle })
-    jobs.forEach((job) => job.disable())
-    jobs.forEach((job) => job.cancel())
-    jobs.forEach((job) => job.save())
-  }
+  const job = agenda.create(name, jobAttributes)
+  job.schedule(`in ${delayInSeconds} seconds`)
+  await job.save()
+  return job.attrs._id
 }
