@@ -35,9 +35,10 @@ const database = mongoClient.db("camera_on")
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
+const mongoUrl = process.env.MONGO_URL
 const agenda = new Agenda({
   db: {
-    address: `mongodb+srv://${mongoUser}:${mongoPass}@cameraon.ihn5vri.mongodb.net/${mongoDb}?retryWrites=true&w=majority`,
+    address: `mongodb+srv://${mongoUser}:${mongoPass}@${mongoUrl}/${mongoDb}?retryWrites=true&w=majority`,
   },
   processEvery: "15ms",
 })
