@@ -1,7 +1,7 @@
 {
   "name": "camera-on",
   "version": "1.0.0",
-  "description": "A discord bot that enforces a camera on rule for voice chat users.",
+  "description": "A discord bot that enforces rules (camera on and no screen sharing) for voice chat users.",
   "main": "main.js",
   "scripts": {
     "build": "rm -rf ./dist && npm run tsc",

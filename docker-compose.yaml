@@ -1,0 +1,24 @@
+version: '1.0.0'
+
+services:
+  # bot:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.bot
+  #   depends_on:
+  #     - redis
+  #     - mongodb
+
+  redis:
+    build:
+      context: .
+      dockerfile: Dockerfile.redis
+    ports:
+      - "6379:6379"
+
+  mongodb:
+    build:
+      context: .
+      dockerfile: Dockerfile.mongodb
+    ports:
+      - "27017:27017"
