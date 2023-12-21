@@ -9,13 +9,11 @@
     "start": "node -r dotenv/config dist/main.js",
     "tsc": "tsc",
     "postinstall": "npm run build",
-    "deployCommands": "yarn build && node -r dotenv/config dist/deploy-commands.js"
+    "deployCommands": "yarn build && node -r dotenv/config dist/deploy-commands.js",
+    "test": "npx jest --detectOpenHandles"
   },
   "author": "davis9001",
   "license": "ISC",
-  "engines": {
-    "node": "18.x"
-  },
   "dependencies": {
     "@discordjs/voice": "^0.16.0",
     "@ffmpeg/core": "^0.12.4",
@@ -26,13 +24,20 @@
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
     "libsodium-wrappers": "^0.7.11",
-    "mongodb": "^5.7.0",
+    "mongodb": "^4",
     "tsc": "^2.0.4",
     "tsconfig": "^7.0.0"
   },
   "devDependencies": {
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.11",
     "@types/node": "^20.4.2",
+    "chai": "^4.3.10",
+    "debug": "^4.3.4",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^8.10.1",
+    "ts-jest": "^29.1.1",
     "tsx": "^3.12.7",
-    "typescript": "^5.1.6"
+    "typescript": "^5.3.3"
   }
 }

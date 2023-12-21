@@ -100,6 +100,13 @@ export const botScheduler = {
     })
 
     changeStream.on("change", async (change) => {
+      let myEvent: MyEvent = to_my_event(change);
+      if myEvent.should_handle {
+        handle_event(myEvent)
+      }
+    })
+
+    changeStream.on("change", async (change) => {
       const channelId = change.fullDocument.channelId
       const memberId = change.fullDocument.memberId
       const botUser = discordClient?.user?.id
@@ -143,7 +150,29 @@ export const botScheduler = {
     })
   },
 }
-const triggerWarning = async (
+
+export const doTriggerWarning = async (
+  action: "join" | "cameraOff" | "screenShared",
+  botJoinSeconds: number,
+  memberId: string
+) => {
+  let stuff = {
+    join: { message: "turn on camera", setting: "botJoinSecondsCamera" },
+    cameraOff: { message: "turn on camera", setting: "botJoinSecondsCamera" },
+    screenShared: {
+      message: "stop screen sharing",
+      setting: "botJoinSecondsScreenshare",
+    },
+  }
+  let { message, setting } = stuff[action]
+  console.log(`${botJoinSeconds} second for ${memberId} to ${message}`)
+  agenda.schedule("warn member", `in ${botJoinSeconds} seconds`, {
+    action,
+    memberId,
+  })
+}
+
+export const triggerWarning = async (
   guild: Guild,
   channel: VoiceBasedChannel,
   member: GuildMember,

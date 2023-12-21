@@ -1,13 +1,17 @@
 {
   "compilerOptions": {
-    "typeRoots": ["src/@types", "node_modules/@types"],
+    "typeRoots": [
+      "src/@types",
+      "node_modules/@types"
+    ],
     "target": "es5",
     "skipLibCheck": true,
     "noImplicitAny": false,
-    "module": "commonjs",
+    "module": "Node16",
     "strict": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "moduleResolution": "Node16"
   },
   "include": [
     "src"
