@@ -4,6 +4,9 @@
     "cameraon",
     "hokify",
     "lerror",
-    "Screenshare"
+    "Screenshare",
+    "setkicktime",
+    "settimeoutminutes",
+    "setwarntime"
   ]
 }

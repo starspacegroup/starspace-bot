@@ -4,11 +4,11 @@
   "description": "A discord bot that enforces rules (camera on and no screen sharing) for voice chat users.",
   "main": "main.js",
   "scripts": {
-    "build": "rm -rf ./dist && npm run tsc",
+    "build": "rm -rf ./dist && yarn run tsc",
     "dev": "tsx ./src/main.ts",
     "start": "node -r dotenv/config dist/main.js",
     "tsc": "tsc",
-    "postinstall": "npm run build",
+    "postinstall": "yarn run build",
     "deployCommands": "yarn build && node -r dotenv/config dist/deploy-commands.js",
     "test": "npx jest --detectOpenHandles"
   },

@@ -18,3 +18,4 @@ export type NumberSettingType =
   | "userTimeoutAfterXInfractionsScreenshare" // screenshare timeout
   | "timeoutLengthMinutesCamera" // camera timeout minutes
   | "timeoutLengthMinutesScreenshare" // screenshare timeout minutes
+  | "enabledOnServer" // enabled on server

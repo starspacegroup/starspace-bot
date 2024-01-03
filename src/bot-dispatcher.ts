@@ -7,30 +7,23 @@ const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
 const mongoUrl = process.env.MONGO_URL
 
-// import { Queue } from "bullmq"
-// const mainQueue = new Queue("main-queue")
 import { Agenda } from "@hokify/agenda"
 
-import mongoClient, { getNumberSetting } from "./connections/mongoDb"
-import VoiceChannelEvent, {
-  VoiceChannelAction,
-} from "./models/voiceChannelEvent"
-import { CommandReasonType } from "./models/commandReasonTypes"
+import mongoClient, {
+  getMutedRole,
+  getNumberSetting,
+  getEnabledStatus,
+} from "./connections/mongoDb"
+import VoiceChannelEvent from "./models/voiceChannelEvent"
 import {
   Client,
   GatewayIntentBits,
   VoiceBasedChannel,
-  PermissionsBitField,
   Guild,
   GuildMember,
 } from "discord.js"
-import { createAudioPlayer } from "@discordjs/voice"
-import { createAudioResource, joinVoiceChannel } from "@discordjs/voice"
 import { ChangeStreamInsertDocument } from "mongodb"
-import { createReadStream } from "fs"
-import { join } from "path"
 import { NumberSettingType } from "./models/numberSetting"
-let voiceConnection = []
 let currentMemberBeingWarned = []
 
 const database = mongoClient.db("camera_on")
@@ -48,24 +41,6 @@ discordClient.login(botToken)
 type DesiredAction = "turn on camera" | "stop screen sharing" | "leave"
 
 const createAgendaJobs = async () => {
-  agenda.define("warn member", async (job) => {
-    const guild = discordClient.guilds.cache.get(job.attrs.data.guildId)
-    const channel = await discordClient.channels.fetch(job.attrs.data.channelId)
-    const member = guild?.members.cache.get(job.attrs.data.memberId)
-    const voiceChannel = channel?.isVoiceBased() ? channel : null
-    if (!member || !voiceChannel || !guild) {
-      const message = `Couldn't find either guild (${guild}), voiceChannel (${voiceChannel}), and/or member (${member}).`
-      // job.fail(`${message}`)
-      lerror(`${message}`)
-      return
-    }
-    try {
-      botDoWarning(guild, voiceChannel, member, job.attrs.data.desiredAction)
-    } catch (error) {
-      lerror(`${error}`)
-    }
-  })
-
   agenda.define("disconnect member", async (job) => {
     const guild = discordClient.guilds.cache.get(job.attrs.data.guildId)
     const channel = await discordClient.channels.fetch(job.attrs.data.channelId)
@@ -73,16 +48,16 @@ const createAgendaJobs = async () => {
     const voiceChannel = channel?.isVoiceBased() ? channel : null
     if (!guild || !voiceChannel || !member) return
     try {
-      disconnectMember(
-        guild,
-        voiceChannel,
-        member,
-        job.attrs.data.desiredAction
-      )
+      disconnectMember(guild, voiceChannel, member)
     } catch (e) {
       lerror(e)
     }
   })
+}
+
+class MyEvent {
+  should_handle!: boolean
+  desired_action!: string
 }
 
 export const botScheduler = {
@@ -100,13 +75,6 @@ export const botScheduler = {
     })
 
     changeStream.on("change", async (change) => {
-      let myEvent: MyEvent = to_my_event(change);
-      if myEvent.should_handle {
-        handle_event(myEvent)
-      }
-    })
-
-    changeStream.on("change", async (change) => {
       const channelId = change.fullDocument.channelId
       const memberId = change.fullDocument.memberId
       const botUser = discordClient?.user?.id
@@ -116,34 +84,36 @@ export const botScheduler = {
       const action = change.fullDocument.action
 
       if (member && channel?.isVoiceBased() && botUser && guild) {
-        const botGuildMember = await channel?.guild.members.fetch(botUser)
-        if (
-          !channel
-            .permissionsFor(botGuildMember)
-            .has(PermissionsBitField.Flags.Connect) ||
-          !channel
-            .permissionsFor(botGuildMember)
-            .has(PermissionsBitField.Flags.SendMessages)
-        ) {
-          // ignore channels the bot can't join or send messages in
+        const enabledOnServer = await getNumberSetting(
+          "enabledOnServer",
+          guild.id
+        )
+        if (!enabledOnServer) {
+          log(`${guild.name}: Bot is not enabled on server.`)
           return
         }
+        // const botGuildMember = await channel?.guild.members.fetch(botUser)
+        // if (
+        //   !channel
+        //     .permissionsFor(botGuildMember)
+        //     .has(PermissionsBitField.Flags.Connect) ||
+        //   !channel
+        //     .permissionsFor(botGuildMember)
+        //     .has(PermissionsBitField.Flags.SendMessages)
+        // ) {
+        //   // ignore channels the bot can't join or send messages in
+        //   return
+        // }
         switch (action) {
           case "join":
           case "cameraOff":
-            await triggerWarning(guild, channel, member, action)
-            break
-          case "screenShared":
-            await triggerWarning(guild, channel, member, action)
+            await serverMuteMember(guild, member)
             break
           case "leave":
-            await crisisAverted(guild, channel, member, "leave")
+            // await serverUnmuteMember(guild, member)
             break
           case "cameraOn":
-            await crisisAverted(guild, channel, member, "turn on camera")
-            break
-          case "screenUnshared":
-            await crisisAverted(guild, channel, member, "stop screen sharing")
+            await serverUnmuteMember(guild, member)
             break
         }
       }
@@ -151,230 +121,90 @@ export const botScheduler = {
   },
 }
 
-export const doTriggerWarning = async (
-  action: "join" | "cameraOff" | "screenShared",
-  botJoinSeconds: number,
-  memberId: string
-) => {
-  let stuff = {
-    join: { message: "turn on camera", setting: "botJoinSecondsCamera" },
-    cameraOff: { message: "turn on camera", setting: "botJoinSecondsCamera" },
-    screenShared: {
-      message: "stop screen sharing",
-      setting: "botJoinSecondsScreenshare",
-    },
-  }
-  let { message, setting } = stuff[action]
-  console.log(`${botJoinSeconds} second for ${memberId} to ${message}`)
-  agenda.schedule("warn member", `in ${botJoinSeconds} seconds`, {
-    action,
-    memberId,
-  })
-}
+export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
+  const mutedByAdhereRole = await getMutedRole(guild.id)
+  const enabledStatus = await getEnabledStatus(guild.id)
+  const botUser = discordClient?.user?.id
+  if (!botUser) return
+  const botGuildMember = await member.voice.channel?.guild.members.fetch(
+    botUser
+  )
+  if (!botGuildMember) return
 
-export const triggerWarning = async (
-  guild: Guild,
-  channel: VoiceBasedChannel,
-  member: GuildMember,
-  action: VoiceChannelAction
-) => {
-  let desiredAction: DesiredAction
-  let numberSetting: NumberSettingType
-  switch (action) {
-    case "join":
-    case "cameraOff":
-      desiredAction = `turn on camera`
-      numberSetting = "botJoinSecondsCamera"
-      break
-    case "screenShared":
-      desiredAction = `stop screen sharing`
-      numberSetting = "botJoinSecondsScreenshare"
-      break
-    default:
-      desiredAction = `turn on camera`
-      numberSetting = "botJoinSecondsCamera"
-      break
-  }
-  const botJoinSeconds = await getNumberSetting(numberSetting, guild.id)
-  log(
-    `Waiting ${botJoinSeconds} seconds for ${member.user.tag} to ${desiredAction}.`
-  )
-
-  scheduleJob(
-    "warn member",
-    botJoinSeconds,
-    guild,
-    channel,
-    member,
-    desiredAction
-  )
-}
-const crisisAverted = async (
-  guild: Guild,
-  voiceChannel: VoiceBasedChannel,
-  member: GuildMember,
-  desiredAction: DesiredAction
-) => {
-  log(
-    `User ${member.user.tag} did ${desiredAction}, cancelling any pending warnings/kicks.`
-  )
-  if (voiceConnection[guild.id]) {
-    voiceConnection[guild.id].disconnect()
-    voiceConnection[guild.id] = null
-  }
-  if (desiredAction == "leave") {
-    await cancelJob(
-      "warn member",
-      guild,
-      voiceChannel,
-      member,
-      "turn on camera"
-    )
-    await cancelJob(
-      "warn member",
-      guild,
-      voiceChannel,
-      member,
-      "stop screen sharing"
-    )
-    await cancelJob(
-      "disconnect member",
-      guild,
-      voiceChannel,
-      member,
-      "turn on camera"
-    )
-    await cancelJob(
-      "disconnect member",
-      guild,
-      voiceChannel,
-      member,
-      "stop screen sharing"
-    )
+  if (!mutedByAdhereRole) {
+    lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
     return
-  } else {
-    await cancelJob("warn member", guild, voiceChannel, member, desiredAction)
-    await cancelJob(
-      "disconnect member",
-      guild,
-      voiceChannel,
-      member,
-      desiredAction
-    )
   }
-}
+  const myMember = await guild.members.fetch({
+    user: member.user.id,
+    force: true,
+  })
+  const memberHasMutedRole = myMember.roles.cache.has(mutedByAdhereRole)
 
-const botDoWarning = async (
-  guild: Guild,
-  voiceChannel: VoiceBasedChannel,
-  member: GuildMember,
-  desiredAction: DesiredAction
-) => {
-  log(
-    `Attempting bot warning in ${guild} ${voiceChannel.name} for ${member.user.tag}.`
-  )
   if (
-    member.voice.channel?.id != voiceChannel.id ||
-    (member.voice.selfVideo && !member.voice.streaming)
+    !member.voice.channel?.permissionsFor(botGuildMember)?.has("SendMessages")
   ) {
+    log(`${guild.name}: I don't have permissions in this VC.`)
+    if (member.roles.cache.has(mutedByAdhereRole)) {
+      member.roles.remove(mutedByAdhereRole)
+      member.edit({ mute: false })
+      log(
+        `${guild.name}: Unmuted ${member} in ${member.voice.channel?.name}. JOINED A CHANNEL I DON'T HAVE PERMISSIONS IN.`
+      )
+    }
+    return
+  }
+  try {
+    if (!enabledStatus && memberHasMutedRole) {
+      member.roles.remove(mutedByAdhereRole)
+      member.edit({ mute: false })
+      log(`${guild.name}: Unmuted ${member} since bot is disabled.`)
+    }
+
+    member.roles.add(mutedByAdhereRole)
+    member.edit({ mute: true })
+    log(`${guild.name}: Muted ${member}`)
+  } catch (e) {
+    lerror(e)
+  }
+}
+const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
+  if (!member.voice) return
+  if (!member.voice.serverMute) {
     log(
-      `User ${member.user.tag} in ${guild} doesn't need warning in ${voiceChannel.name}, skipping.`
+      `${guild.name}: ${member.user.tag} is not muted so I'm not going to unmute them.`
     )
     return
   }
-  if (currentMemberBeingWarned[guild.id] == member.id) {
-    log(
-      `User ${member.user.tag} in ${guild} is already being warned in ${voiceChannel.name}, skipping.`
-    )
+  const mutedByAdhereRole = await getMutedRole(guild.id)
+  if (!mutedByAdhereRole) {
+    lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
     return
   }
-  log(
-    `Doing bot warning in ${guild} ${voiceChannel.name} for ${member.user.tag}.`
-  )
-  if (currentMemberBeingWarned[guild.id] != null) {
-    await cancelJob("warn member", guild, voiceChannel, member, desiredAction)
-    await scheduleJob(
-      "warn member",
-      5,
-      guild,
-      voiceChannel,
-      member,
-      desiredAction
-    )
-    log(
-      `Scheduled retry in ${guild} to join on ${member.user.tag} in voice channel: ${voiceChannel.name}.`
-    )
-    return
+  try {
+    const myMember = await guild.members.fetch({
+      user: member.user.id,
+      force: true,
+    })
+    const memberHasMutedRole = myMember.roles.cache.has(mutedByAdhereRole)
+    if (memberHasMutedRole) {
+      member.edit({ mute: false })
+      member.roles.remove(mutedByAdhereRole)
+      log(`${guild.name}: Unmuted ${member}`)
+    } else {
+      log(
+        `${guild.name}: ${member.user.tag} was not muted by me, not un-muting.`
+      )
+    }
+  } catch (e) {
+    lerror(e)
   }
-  currentMemberBeingWarned[guild.id] = member.id
-
-  let numberSettingKickSeconds: NumberSettingType
-  let reason: CommandReasonType
-  switch (desiredAction) {
-    case "turn on camera":
-      numberSettingKickSeconds = "userDisconnectSecondsCamera"
-      reason = "Camera"
-      break
-    case "stop screen sharing":
-      numberSettingKickSeconds = "userDisconnectSecondsScreenshare"
-      reason = "Screenshare"
-      break
-    default:
-      numberSettingKickSeconds = "userDisconnectSecondsCamera"
-      reason = "Camera"
-      break
-  }
-
-  const kickSeconds = await getNumberSetting(numberSettingKickSeconds, guild.id)
-
-  let audioFile = ""
-  switch (desiredAction) {
-    case "turn on camera":
-      audioFile = join(__dirname, "../camera_warning.mp3")
-      break
-    case "stop screen sharing":
-      audioFile = join(__dirname, "../screenshare_warning.mp3")
-      break
-    default:
-      audioFile = join(__dirname, "../camera_warning.mp3")
-      break
-  }
-
-  const player = createAudioPlayer()
-  let resource = createAudioResource(createReadStream(audioFile))
-  if (resource.volume) {
-    resource.volume.setVolume(0.5)
-  }
-
-  currentMemberBeingWarned[guild.id] = member.id
-  voiceChannel.send(
-    `Hey ${member.user.tag}, ${desiredAction}. I'm going to disconnect you in ${kickSeconds} seconds.`
-  )
-  voiceConnection[guild.id] = joinVoiceChannel({
-    guildId: voiceChannel.guild.id,
-    channelId: voiceChannel.id,
-    adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-  })
-  player.play(resource)
-  voiceConnection[guild.id].subscribe(player)
-  log(
-    `Disconnecting ${member.user.tag} in ${voiceChannel.name} in ${kickSeconds} seconds. Reason: ${reason}.`
-  )
-  await scheduleJob(
-    "disconnect member",
-    kickSeconds,
-    guild,
-    voiceChannel,
-    member,
-    desiredAction
-  )
 }
 
 const disconnectMember = (
   guild: Guild,
   voiceChannel: VoiceBasedChannel,
-  member: GuildMember,
-  reason: VoiceChannelAction
+  member: GuildMember
 ) => {
   if (!guild || !voiceChannel || !member) {
     lerror(
@@ -395,13 +225,12 @@ const disconnectMember = (
     return
   }
   try {
-    voiceChannel.send(`Disconnected ${member}: ${reason}.`)
+    voiceChannel.send(`Disconnected ${member}`)
 
-    member.voice.disconnect(`${reason}`)
+    member.voice.disconnect(`Camera off for too long.`)
     member.client.voice.client.destroy
-    currentMemberBeingWarned[guild.id] = null
     log(
-      `User ${member.user.tag} disconnected from ${voiceChannel.name}. Reason: ${reason}.`
+      `User ${member.user.tag} disconnected from ${voiceChannel.name}. Reason: Camera off.`
     )
   } catch (error) {
     lerror(error)
@@ -412,30 +241,14 @@ const cancelJob = async (
   name: string,
   guild: Guild,
   channel: VoiceBasedChannel,
-  member: GuildMember,
-  desiredAction: DesiredAction
+  member: GuildMember
 ) => {
-  // const jobs = await agenda.jobs({
-  //   name: name,
-  //   "data.guildId": guild.id,
-  //   "data.channelId": channel.id,
-  //   "data.memberId": member.id,
-  //   "data.desiredAction": desiredAction,
-  // })
-  // if (!jobs) return
-  // let numJobsRemoved = 0
-  // jobs.forEach((job) => {
-  //   job.disable()
-  //   job.save()
-  //   numJobsRemoved++
-  // })
   const numJobsRemoved = await agenda
     .cancel({
       name: name,
       "data.guildId": guild.id,
       "data.channelId": channel.id,
       "data.memberId": member.id,
-      "data.desiredAction": desiredAction,
     })
     .catch((error) => {
       lerror(error)

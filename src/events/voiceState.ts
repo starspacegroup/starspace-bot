@@ -202,12 +202,12 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
     return
   }
   if (memberJoined(member, oldState, newState) && newState.channel) {
-    log(`${userName} joined ${newState.channel?.name}.`)
+    log(`${newState.guild.name}: ${userName} joined ${newState.channel?.name}.`)
     insertVoiceChannelEvent(guildId, member, newState.channel, "join")
   }
 
   if (memberLeft(member, oldState, newState) && oldState.channel) {
-    log(`${userName} left ${oldState.channel?.name}.`)
+    log(`${newState.guild.name}: ${userName} left ${oldState.channel?.name}.`)
     insertVoiceChannelEvent(guildId, member, oldState.channel, "leave")
   }
 
@@ -224,22 +224,22 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   }
 
   if (cameraDisabled(member, oldState, newState) && newState.channel) {
-    log(`${userName} camera disabled.`)
+    log(`${newState.guild.name}: ${userName} camera disabled.`)
     insertVoiceChannelEvent(guildId, member, newState.channel, "cameraOff")
   }
 
   if (cameraEnabled(member, oldState, newState) && newState.channel) {
-    log(`${userName} camera enabled.`)
+    log(`${newState.guild.name}: ${userName} camera enabled.`)
     insertVoiceChannelEvent(guildId, member, newState.channel, "cameraOn")
   }
 
   if (screenShared(member, oldState, newState) && newState.channel) {
-    log(`${userName} screen shared.`)
+    log(`${newState.guild.name}: ${userName} screen shared.`)
     insertVoiceChannelEvent(guildId, member, newState.channel, "screenShared")
   }
 
   if (screenUnshared(member, oldState, newState) && newState.channel) {
-    log(`${userName} screen unshared.`)
+    log(`${newState.guild.name}: ${userName} screen unshared.`)
     insertVoiceChannelEvent(guildId, member, newState.channel, "screenUnshared")
   }
 }

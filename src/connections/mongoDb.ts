@@ -5,6 +5,9 @@ import VoiceChannelEvent, {
 } from "../models/voiceChannelEvent"
 import { GuildMember, VoiceBasedChannel } from "discord.js"
 import log from "../lib/logger"
+import MemberMutedByBot from "../models/memberMutedByBot"
+import IdiotRole from "../models/idiotRole"
+import MutedRole from "../models/mutedRole"
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
@@ -17,6 +20,47 @@ const mongoClient = new MongoClient(uri, {
     deprecationErrors: true,
   },
 })
+
+export const getEnabledStatus = async (guildId: string) => {
+  const database = mongoClient.db("camera_on")
+  const result = await database
+    .collection<NumberSetting>("numberSettings")
+    .findOne({ name: "enabledOnServer", guildId: guildId })
+  return result ? result.value : 0
+}
+
+export const setEnabledStatus = async (guildId: string, status: boolean) => {
+  const statusNumber = status ? 1 : 0
+  const database = mongoClient.db("camera_on")
+  const result = await database
+    .collection<NumberSetting>("numberSettings")
+    .updateOne(
+      { name: "enabledOnServer", guildId: guildId },
+      { $set: { value: statusNumber } },
+      { upsert: true }
+    )
+  return result
+}
+
+export const setMutedRole = async (guildId: string, roleId: string) => {
+  const database = mongoClient.db("camera_on")
+  const mutedRoles = database.collection<MutedRole>("mutedRole")
+  const result = await mutedRoles.updateOne(
+    {
+      guildId: guildId,
+    },
+    { $set: { roleId: roleId } },
+    { upsert: true }
+  )
+  return result
+}
+
+export const getMutedRole = async (guildId: string) => {
+  const database = mongoClient.db("camera_on")
+  const mutedRoles = database.collection<MutedRole>("mutedRole")
+  const result = await mutedRoles.findOne({ guildId: guildId })
+  return result ? result.roleId : null
+}
 
 export const insertVoiceChannelEvent = async (
   guildId: string,
@@ -40,6 +84,35 @@ export const insertVoiceChannelEvent = async (
   // log(`A document was inserted with the _id: ${result.insertedId}`)
 }
 
+export const setMemberMutedByBot = async (
+  guildId: string,
+  memberId: string,
+  serverMuted: boolean
+) => {
+  const database = mongoClient.db("camera_on")
+  const memberMuted = database.collection<MemberMutedByBot>("memberMutedByBot")
+  const result = await memberMuted.updateOne(
+    { guildId: guildId, memberId: memberId },
+    { $set: { serverMuted: serverMuted } },
+    { upsert: true }
+  )
+  // log(`A document was inserted with the _id: ${result.insertedId}`)
+}
+
+export const getMemberMutedByBot = async (
+  guildId: string,
+  memberId: string
+) => {
+  const database = mongoClient.db("camera_on")
+  const memberServerMuted =
+    database.collection<MemberMutedByBot>("memberMutedByBot")
+  const result = await memberServerMuted.findOne({
+    guildId: guildId,
+    memberId: memberId,
+  })
+  return result ? result.serverMuted : false
+}
+
 export const getNumberSetting = async (
   settingName: NumberSettingType,
   guildId: string
@@ -50,7 +123,6 @@ export const getNumberSetting = async (
     .findOne({ name: settingName, guildId: guildId })
   return result ? result.value : 0
 }
-
 export const getJoinTime = async () => {
   const database = mongoClient.db("camera_on")
   // @ts-ignore
