@@ -9,23 +9,14 @@ import mongoClient, {
   getEnabledStatus,
 } from "./connections/mongoDb"
 import VoiceChannelEvent from "./models/voiceChannelEvent"
-import {
-  Client,
-  GatewayIntentBits,
-  VoiceBasedChannel,
-  Guild,
-  GuildMember,
-} from "discord.js"
+import { Client, GatewayIntentBits, Guild, GuildMember } from "discord.js"
 import { ChangeStreamInsertDocument } from "mongodb"
-let currentMemberBeingWarned = []
 
 const database = mongoClient.db("camera_on")
 const discordClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 })
 discordClient.login(botToken)
-
-type DesiredAction = "turn on camera" | "stop screen sharing" | "leave"
 
 export const botScheduler = {
   async run() {
@@ -151,41 +142,5 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
     }
   } catch (e) {
     lerror(e)
-  }
-}
-
-const disconnectMember = (
-  guild: Guild,
-  voiceChannel: VoiceBasedChannel,
-  member: GuildMember
-) => {
-  if (!guild || !voiceChannel || !member) {
-    lerror(
-      `Couldn't find either guild (${guild}), voiceChannel (${voiceChannel}), and/or member (${member}).`
-    )
-    if (currentMemberBeingWarned[guild.id] == member.id) {
-      currentMemberBeingWarned[guild.id] = null
-    }
-    return
-  }
-  if (
-    member.voice.channel?.id != voiceChannel.id ||
-    (member.voice.selfVideo && !member.voice.streaming)
-  ) {
-    log(
-      `Skipping disconnect of ${member.user.tag} in ${guild} because they're not in ${voiceChannel.name} or they have camera on and are not streaming.`
-    )
-    return
-  }
-  try {
-    voiceChannel.send(`Disconnected ${member}`)
-
-    member.voice.disconnect(`Camera off for too long.`)
-    member.client.voice.client.destroy
-    log(
-      `User ${member.user.tag} disconnected from ${voiceChannel.name}. Reason: Camera off.`
-    )
-  } catch (error) {
-    lerror(error)
   }
 }
