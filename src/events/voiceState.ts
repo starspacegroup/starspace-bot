@@ -217,7 +217,7 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
     oldState.channel
   ) {
     log(
-      `${userName} moved from ${oldState.channel?.name} to ${newState.channel?.name}.`
+      `${newState.guild.name}: ${userName} moved from ${oldState.channel?.name} to ${newState.channel?.name}.`
     )
     insertVoiceChannelEvent(guildId, member, oldState.channel, "leave")
     insertVoiceChannelEvent(guildId, member, newState.channel, "join")
