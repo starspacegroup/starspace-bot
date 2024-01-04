@@ -69,6 +69,7 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
   const mutedByAdhereRole = await getMutedRole(guild.id)
   const enabledStatus = await getEnabledStatus(guild.id)
   const botUser = discordClient?.user?.id
+  if (!member.voice) return
   if (!botUser) return
   const botGuildMember = await member.voice.channel?.guild.members.fetch(
     botUser
@@ -108,7 +109,7 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
       return
     }
 
-    member.roles.add(mutedByAdhereRole)
+    // member.roles.add(mutedByAdhereRole)
     member.edit({ mute: true })
     log(`${guild.name}: Muted ${member.user.username}`)
   } catch (e) {
@@ -117,32 +118,15 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
 }
 const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
   if (!member.voice) return
-  if (!member.voice.serverMute) {
-    log(
-      `${guild.name}: ${member.user.tag} is not muted so I'm not going to unmute them.`
-    )
-    return
-  }
   const mutedByAdhereRole = await getMutedRole(guild.id)
   if (!mutedByAdhereRole) {
     lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
     return
   }
   try {
-    const myMember = await guild.members.fetch({
-      user: member.user.id,
-      force: true,
-    })
-    const memberHasMutedRole = myMember.roles.cache.has(mutedByAdhereRole)
-    if (memberHasMutedRole) {
-      member.edit({ mute: false })
-      member.roles.remove(mutedByAdhereRole)
-      log(`${guild.name}: Unmuted ${member.user.username}`)
-    } else {
-      log(
-        `${guild.name}: ${member.user.tag} was not muted by me, not un-muting.`
-      )
-    }
+    member.edit({ mute: false })
+    member.roles.remove(mutedByAdhereRole)
+    log(`${guild.name}: Unmuted ${member.user.username}`)
   } catch (e) {
     lerror(e)
   }
