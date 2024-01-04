@@ -93,7 +93,7 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
       member.roles.remove(mutedByAdhereRole)
       member.edit({ mute: false })
       log(
-        `${guild.name}: Unmuted ${member} in ${member.voice.channel?.name}. JOINED A CHANNEL I DON'T HAVE PERMISSIONS IN.`
+        `${guild.name}: Unmuted ${member.user.username} in ${member.voice.channel?.name}. JOINED A CHANNEL I DON'T HAVE PERMISSIONS IN.`
       )
     }
     return
@@ -102,12 +102,15 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
     if (!enabledStatus && memberHasMutedRole) {
       member.roles.remove(mutedByAdhereRole)
       member.edit({ mute: false })
-      log(`${guild.name}: Unmuted ${member} since bot is disabled.`)
+      log(
+        `${guild.name}: Unmuted ${member.user.username} since bot is disabled.`
+      )
+      return
     }
 
     member.roles.add(mutedByAdhereRole)
     member.edit({ mute: true })
-    log(`${guild.name}: Muted ${member}`)
+    log(`${guild.name}: Muted ${member.user.username}`)
   } catch (e) {
     lerror(e)
   }
@@ -134,7 +137,7 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
     if (memberHasMutedRole) {
       member.edit({ mute: false })
       member.roles.remove(mutedByAdhereRole)
-      log(`${guild.name}: Unmuted ${member}`)
+      log(`${guild.name}: Unmuted ${member.user.username}`)
     } else {
       log(
         `${guild.name}: ${member.user.tag} was not muted by me, not un-muting.`
