@@ -90,13 +90,11 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
     !member.voice.channel?.permissionsFor(botGuildMember)?.has("SendMessages")
   ) {
     log(`${guild.name}: I don't have permissions in this VC.`)
-    if (member.roles.cache.has(mutedByAdhereRole)) {
-      member.roles.remove(mutedByAdhereRole)
-      member.edit({ mute: false })
-      log(
-        `${guild.name}: Unmuted ${member.user.username} in ${member.voice.channel?.name}. JOINED A CHANNEL I DON'T HAVE PERMISSIONS IN.`
-      )
-    }
+    member.roles.remove(mutedByAdhereRole)
+    member.edit({ mute: false })
+    log(
+      `${guild.name}: Unmuted ${member.user.username} in ${member.voice.channel?.name}. JOINED A CHANNEL I DON'T HAVE PERMISSIONS IN.`
+    )
     return
   }
   try {
