@@ -124,6 +124,13 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
   try {
     member.edit({ mute: false })
     member.roles.remove(mutedByAdhereRole)
+    setTimeout(() => {
+      if (member.voice.selfVideo) {
+        member.edit({ mute: false })
+        member.roles.remove(mutedByAdhereRole)
+      }
+      log("Second try for good measure")
+    }, 1500)
     log(`${guild.name}: Unmuted ${member.user.username}`)
   } catch (e) {
     lerror(e)
