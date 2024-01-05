@@ -129,7 +129,7 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
         member.edit({ mute: false })
         member.roles.remove(mutedByAdhereRole)
       }
-      log("Second try for good measure")
+      // log("Second try for good measure")
     }, 1500)
     log(`${guild.name}: Unmuted ${member.user.username}`)
   } catch (e) {
