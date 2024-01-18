@@ -18,6 +18,30 @@ const discordClient = new Client({
 })
 discordClient.login(botToken)
 
+const handleEvent = async (
+  guild: Guild,
+  member: GuildMember,
+  action: string
+) => {
+  const enabledOnServer = await getNumberSetting("enabledOnServer", guild.id)
+  if (!enabledOnServer) {
+    log(`${guild.name}: Bot is not enabled on server.`)
+    return
+  }
+  switch (action) {
+    case "join":
+    case "cameraOff":
+      await serverMuteMember(guild, member)
+      break
+    case "leave":
+      // await serverUnmuteMember(guild, member)
+      break
+    case "cameraOn":
+      await serverUnmuteMember(guild, member)
+      break
+  }
+}
+
 export const botScheduler = {
   async run() {
     const voiceChannelEvents =
@@ -31,35 +55,22 @@ export const botScheduler = {
     })
 
     changeStream.on("change", async (change) => {
-      const channelId = change.fullDocument.channelId
-      const memberId = change.fullDocument.memberId
-      const botUser = discordClient?.user?.id
-      const channel = discordClient.channels.cache.get(channelId)
-      const guild = discordClient.guilds.cache.get(change.fullDocument.guildId)
-      const member = await guild?.members.fetch(memberId)
-      const action = change.fullDocument.action
-
-      if (member && channel?.isVoiceBased() && botUser && guild) {
-        const enabledOnServer = await getNumberSetting(
-          "enabledOnServer",
-          guild.id
+      try {
+        const channelId = change.fullDocument.channelId
+        const memberId = change.fullDocument.memberId
+        const botUser = discordClient?.user?.id
+        const channel = discordClient.channels.cache.get(channelId)
+        const guild = discordClient.guilds.cache.get(
+          change.fullDocument.guildId
         )
-        if (!enabledOnServer) {
-          log(`${guild.name}: Bot is not enabled on server.`)
-          return
+        const member = await guild?.members.fetch(memberId)
+        const action = change.fullDocument.action
+
+        if (member && channel?.isVoiceBased() && botUser && guild) {
+          handleEvent(guild, member, action)
         }
-        switch (action) {
-          case "join":
-          case "cameraOff":
-            await serverMuteMember(guild, member)
-            break
-          case "leave":
-            // await serverUnmuteMember(guild, member)
-            break
-          case "cameraOn":
-            await serverUnmuteMember(guild, member)
-            break
-        }
+      } catch (e) {
+        lerror(e)
       }
     })
   },
@@ -97,22 +108,16 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
     )
     return
   }
-  try {
-    if (!enabledStatus && memberHasMutedRole) {
-      member.roles.remove(mutedByAdhereRole)
-      member.edit({ mute: false })
-      log(
-        `${guild.name}: Unmuted ${member.user.username} since bot is disabled.`
-      )
-      return
-    }
-
-    // member.roles.add(mutedByAdhereRole)
-    member.edit({ mute: true })
-    log(`${guild.name}: Muted ${member.user.username}`)
-  } catch (e) {
-    lerror(e)
+  if (!enabledStatus) {
+    member.roles.remove(mutedByAdhereRole)
+    member.edit({ mute: false })
+    log(`${guild.name}: Unmuted ${member.user.username} since bot is disabled.`)
+    return
   }
+
+  // member.roles.add(mutedByAdhereRole)
+  member.edit({ mute: true })
+  log(`${guild.name}: Muted ${member.user.username}`)
 }
 const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
   if (!member.voice) return
@@ -121,18 +126,14 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
     lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
     return
   }
-  try {
-    member.edit({ mute: false })
-    member.roles.remove(mutedByAdhereRole)
-    setTimeout(() => {
-      if (member.voice.selfVideo) {
-        member.edit({ mute: false })
-        member.roles.remove(mutedByAdhereRole)
-      }
-      // log("Second try for good measure")
-    }, 1500)
-    log(`${guild.name}: Unmuted ${member.user.username}`)
-  } catch (e) {
-    lerror(e)
-  }
+  member.edit({ mute: false })
+  member.roles.remove(mutedByAdhereRole)
+  setTimeout(() => {
+    if (member.voice.selfVideo) {
+      member.edit({ mute: false })
+      member.roles.remove(mutedByAdhereRole)
+    }
+    // log("Second try for good measure")
+  }, 1500)
+  log(`${guild.name}: Unmuted ${member.user.username}`)
 }
