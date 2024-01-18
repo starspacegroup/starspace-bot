@@ -102,7 +102,9 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
   ) {
     log(`${guild.name}: I don't have permissions in this VC.`)
     member.roles.remove(mutedByAdhereRole)
-    member.edit({ mute: false })
+    await member.edit({ mute: false }).catch((e) => {
+      lerror(e)
+    })
     log(
       `${guild.name}: Unmuted ${member.user.username} in ${member.voice.channel?.name}. JOINED A CHANNEL I DON'T HAVE PERMISSIONS IN.`
     )
@@ -110,13 +112,17 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
   }
   if (!enabledStatus) {
     member.roles.remove(mutedByAdhereRole)
-    member.edit({ mute: false })
+    await member.edit({ mute: false }).catch((e) => {
+      lerror(e)
+    })
     log(`${guild.name}: Unmuted ${member.user.username} since bot is disabled.`)
     return
   }
 
   // member.roles.add(mutedByAdhereRole)
-  member.edit({ mute: true })
+  await member.edit({ mute: true }).catch((e) => {
+    lerror(e)
+  })
   log(`${guild.name}: Muted ${member.user.username}`)
 }
 const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
@@ -126,11 +132,15 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
     lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
     return
   }
-  member.edit({ mute: false })
   member.roles.remove(mutedByAdhereRole)
-  setTimeout(() => {
+  await member.edit({ mute: false }).catch((e) => {
+    lerror(e)
+  })
+  setTimeout(async () => {
     if (member.voice.selfVideo) {
-      member.edit({ mute: false })
+      await member.edit({ mute: false }).catch((e) => {
+        lerror(e)
+      })
       member.roles.remove(mutedByAdhereRole)
     }
     // log("Second try for good measure")
