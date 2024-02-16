@@ -131,6 +131,26 @@ export const getJoinTime = async () => {
   return result.value
 }
 
+export const setIdiotRole = async (guildId: string, roleId: string) => {
+  const database = mongoClient.db("camera_on")
+  const result = await database
+    .collection<IdiotRole>("idiotRole")
+    .updateOne(
+      { guildId: guildId },
+      { $set: { roleId: roleId } },
+      { upsert: true }
+    )
+  return result
+}
+
+export const getIdiotRole = async (guildId: string) => {
+  const database = mongoClient.db("camera_on")
+  const result = await database
+    .collection<IdiotRole>("idiotRole")
+    .findOne({ guildId: guildId })
+  return result ? result.roleId : null
+}
+
 process.on("SIGINT", () => {
   mongoClient.close().then(() => {
     process.exit(0)
