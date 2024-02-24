@@ -1,3 +1,7 @@
+## External requirements:
+
+- MongoDB
+
 ## Getting started:
 
 - Rename or copy .env-example to .env
