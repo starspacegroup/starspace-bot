@@ -7,10 +7,6 @@ import { voiceStateEvent } from "./events/voiceState"
 
 import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
-import { setwarntime } from "./commands/utility/setWarnTime"
-import { setkicktime } from "./commands/utility/setKickTime"
-import { settimeout } from "./commands/utility/setTimeout"
-import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
 import { insult } from "./commands/text/insult"
 
 import { botScheduler } from "./bot-dispatcher"
@@ -27,10 +23,6 @@ client.on("voiceStateUpdate", voiceStateEvent)
 const commands = {
   enable,
   disable,
-  setwarntime,
-  setkicktime,
-  settimeout,
-  settimeoutminutes,
   insult,
 }
 

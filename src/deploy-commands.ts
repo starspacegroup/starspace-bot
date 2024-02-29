@@ -1,10 +1,6 @@
 import { REST, Routes } from "discord.js"
 import * as dotenv from "dotenv"
 dotenv.config()
-import { setwarntime } from "./commands/utility/setWarnTime"
-import { setkicktime } from "./commands/utility/setKickTime"
-import { settimeout } from "./commands/utility/setTimeout"
-import { settimeoutminutes } from "./commands/utility/setTimeoutMinutes"
 import { insult } from "./commands/text/insult"
 import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
@@ -14,15 +10,9 @@ const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
 const token = process.env.DISCORD_BOT_TOKEN
 
-const commands = [
-  enable,
-  disable,
-  setwarntime,
-  setkicktime,
-  settimeout,
-  settimeoutminutes,
-  insult,
-].map((command) => command.command.toJSON())
+const commands = [enable, disable, insult].map((command) =>
+  command.command.toJSON()
+)
 
 // @ts-ignore
 const rest = new REST().setToken(token)
