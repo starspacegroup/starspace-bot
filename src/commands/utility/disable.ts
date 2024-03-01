@@ -7,10 +7,12 @@ import {
 } from "discord.js"
 import { getMutedRole } from "../../connections/mongoDb"
 
+const botName = process.env.DISCORD_BOT_NAME
+
 export const disable = {
   command: new SlashCommandBuilder()
     .setName("disable")
-    .setDescription("Disable Adhere")
+    .setDescription(`Disable ${botName}.`)
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
@@ -21,23 +23,10 @@ export const disable = {
     }
     await setEnabledStatus(interaction.guildId, false)
       .then(async (response) => {
-        await interaction.editReply(`Adhere disabled.`)
-        // if (interaction.guildId) {
-        //   log(
-        //     `Adhere has been disabled in ${interaction.guild?.name}, removing muted role from all members.`
-        //   )
-        //   const mutedRole = await getMutedRole(interaction.guildId)
-        //   if (mutedRole) {
-        //     interaction.guild?.roles.cache
-        //       .get(mutedRole)
-        //       ?.members.forEach(async (member) => {
-        //         await member.roles.remove(mutedRole)
-        //       })
-        //   }
-        // }
+        await interaction.editReply(`${botName} disabled.`)
       })
       .catch(async (err) => {
-        await interaction.editReply(`Error enabling Adhere.`)
+        await interaction.editReply(`Error enabling ${botName}.`)
         log(err)
       })
   },

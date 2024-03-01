@@ -6,6 +6,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js"
 
+const botName = process.env.DISCORD_BOT_NAME
+
 export const idiotRole = {
   command: new SlashCommandBuilder()
     .setName("setIdiotRole")
@@ -31,10 +33,10 @@ export const idiotRole = {
     }
     await setIdiotRole(interaction.guildId, role.role?.id as string)
       .then(async (response) => {
-        await interaction.editReply(`Adhere enabled.`)
+        await interaction.editReply(`${botName} enabled.`)
       })
       .catch(async (err) => {
-        await interaction.editReply(`Error enabling Adhere.`)
+        await interaction.editReply(`Error enabling ${botName}.`)
         log(err)
       })
   },

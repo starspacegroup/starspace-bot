@@ -9,22 +9,6 @@ export function readyEvent(client) {
   client.guilds.cache.forEach(async (guild) => {
     const mutedRoleId = await getMutedRole(guild.id)
     const mutedRole = await guild.roles.cache.get(mutedRoleId)
-    if (!mutedRoleId || !mutedRole) {
-      const createdUserRole = await guild.roles
-        .create({
-          name: "Muted by Adhere",
-          color: Colors.Red,
-          reason: "For Adhere bot to mute members.",
-        })
-        .then(async (role) => {
-          await setMutedRole(guild.id, role.id)
-          log(`Created muted role for ${guild.name} (${guild.id})`)
-          return role
-        })
-        .catch((error) => {
-          lerror(`Couldn't create role: ${error}`)
-        })
-    }
     log(`Connected to ${guild.name} (${guild.id})`)
   })
 }

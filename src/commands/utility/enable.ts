@@ -6,10 +6,12 @@ import {
   SlashCommandBuilder,
 } from "discord.js"
 
+const botName = process.env.DISCORD_BOT_NAME
+
 export const enable = {
   command: new SlashCommandBuilder()
     .setName("enable")
-    .setDescription("Enable Adhere")
+    .setDescription(`Enable ${botName}.`)
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
@@ -20,10 +22,10 @@ export const enable = {
     }
     await setEnabledStatus(interaction.guildId, true)
       .then(async (response) => {
-        await interaction.editReply(`Adhere enabled.`)
+        await interaction.editReply(`${botName} enabled.`)
       })
       .catch(async (err) => {
-        await interaction.editReply(`Error enabling Adhere.`)
+        await interaction.editReply(`Error enabling ${botName}.`)
         log(err)
       })
   },

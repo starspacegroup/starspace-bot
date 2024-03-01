@@ -23,7 +23,7 @@ const mongoClient = new MongoClient(uri, {
 })
 
 export const getEnabledStatus = async (guildId: string) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const result = await database
     .collection<NumberSetting>("numberSettings")
     .findOne({ name: "enabledOnServer", guildId: guildId })
@@ -32,7 +32,7 @@ export const getEnabledStatus = async (guildId: string) => {
 
 export const setEnabledStatus = async (guildId: string, status: boolean) => {
   const statusNumber = status ? 1 : 0
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const result = await database
     .collection<NumberSetting>("numberSettings")
     .updateOne(
@@ -44,7 +44,7 @@ export const setEnabledStatus = async (guildId: string, status: boolean) => {
 }
 
 export const setMutedRole = async (guildId: string, roleId: string) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const mutedRoles = database.collection<MutedRole>("mutedRole")
   const result = await mutedRoles.updateOne(
     {
@@ -57,7 +57,7 @@ export const setMutedRole = async (guildId: string, roleId: string) => {
 }
 
 export const getMutedRole = async (guildId: string) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const mutedRoles = database.collection<MutedRole>("mutedRole")
   const result = await mutedRoles.findOne({ guildId: guildId })
   return result ? result.roleId : null
@@ -69,7 +69,7 @@ export const insertVoiceChannelEvent = async (
   channel: VoiceBasedChannel,
   action: VoiceChannelAction
 ) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const voiceChannelEvent =
     database.collection<VoiceChannelEvent>("voiceChannelEvent")
 
@@ -90,7 +90,7 @@ export const setMemberMutedByBot = async (
   memberId: string,
   serverMuted: boolean
 ) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const memberMuted = database.collection<MemberMutedByBot>("memberMutedByBot")
   const result = await memberMuted.updateOne(
     { guildId: guildId, memberId: memberId },
@@ -104,7 +104,7 @@ export const getMemberMutedByBot = async (
   guildId: string,
   memberId: string
 ) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const memberServerMuted =
     database.collection<MemberMutedByBot>("memberMutedByBot")
   const result = await memberServerMuted.findOne({
@@ -118,14 +118,14 @@ export const getNumberSetting = async (
   settingName: NumberSettingType,
   guildId: string
 ) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const result = await database
     .collection<NumberSetting>("numberSettings")
     .findOne({ name: settingName, guildId: guildId })
   return result ? result.value : 0
 }
 export const getJoinTime = async () => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   // @ts-ignore
   const numberSettings = database.collection<TimeSetting>("numberSettings")
   const result = await numberSettings.findOne({ name: "botJoin" })
@@ -133,7 +133,7 @@ export const getJoinTime = async () => {
 }
 
 export const setIdiotRole = async (guildId: string, roleId: string) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const result = await database
     .collection<IdiotRole>("idiotRole")
     .updateOne(
@@ -145,7 +145,7 @@ export const setIdiotRole = async (guildId: string, roleId: string) => {
 }
 
 export const getIdiotRole = async (guildId: string) => {
-  const database = mongoClient.db("camera_on")
+  const database = mongoClient.db(mongoDb)
   const result = await database
     .collection<IdiotRole>("idiotRole")
     .findOne({ guildId: guildId })
