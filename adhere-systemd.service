@@ -3,13 +3,13 @@
 Description=Adhere Discord Bot
 
 [Service]
-ExecStart=/home/ec2-user/.nvm/versions/node/v18.18.2/bin/yarn start
+ExecStart=/home/ec2-user/.nvm/versions/node/v20.11.1/bin/yarn start
 WorkingDirectory=/home/ec2-user/adherebot
 Restart=always
 RestartSec=1
 User=ec2-user
 Group=ec2-user
-Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/ec2-user/adhere/node_modules/.bin
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/ec2-user/adhere/node_modules/.bin:/home/ec2-user/.nvm/versions/node/v20.11.1/bin
 Environment=NODE_ENV=production
 
 [Install]
