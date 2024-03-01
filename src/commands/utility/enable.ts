@@ -7,7 +7,6 @@ import {
 } from "discord.js"
 
 const botName = process.env.BOT_NAME
-const botName = process.env.BOT_NAME
 
 export const enable = {
   command: new SlashCommandBuilder()
