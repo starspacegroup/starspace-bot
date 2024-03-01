@@ -4,7 +4,6 @@ dotenv.config()
 const botToken = process.env.DISCORD_BOT_TOKEN
 
 import mongoClient, {
-  getMutedRole,
   getNumberSetting,
   getEnabledStatus,
 } from "./connections/mongoDb"
@@ -77,7 +76,6 @@ export const botScheduler = {
 }
 
 export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
-  const mutedByAdhereRole = await getMutedRole(guild.id)
   const enabledStatus = await getEnabledStatus(guild.id)
   const botUser = discordClient?.user?.id
   if (!member.voice) return
@@ -87,21 +85,15 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
   )
   if (!botGuildMember) return
 
-  if (!mutedByAdhereRole) {
-    lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
-    return
-  }
   const myMember = await guild.members.fetch({
     user: member.user.id,
     force: true,
   })
-  const memberHasMutedRole = myMember.roles.cache.has(mutedByAdhereRole)
 
   if (
     !member.voice.channel?.permissionsFor(botGuildMember)?.has("SendMessages")
   ) {
     log(`${guild.name}: I don't have permissions in this VC.`)
-    member.roles.remove(mutedByAdhereRole)
     await member.edit({ mute: false }).catch((e) => {
       lerror(e)
     })
@@ -111,7 +103,6 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
     return
   }
   if (!enabledStatus) {
-    member.roles.remove(mutedByAdhereRole)
     await member.edit({ mute: false }).catch((e) => {
       lerror(e)
     })
@@ -119,7 +110,6 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
     return
   }
 
-  // member.roles.add(mutedByAdhereRole)
   await member.edit({ mute: true }).catch((e) => {
     lerror(e)
   })
@@ -127,12 +117,6 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
 }
 const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
   if (!member.voice) return
-  const mutedByAdhereRole = await getMutedRole(guild.id)
-  if (!mutedByAdhereRole) {
-    lerror(`${guild.name}: Couldn't find mutedByAdhereRole.`)
-    return
-  }
-  member.roles.remove(mutedByAdhereRole)
   await member.edit({ mute: false }).catch((e) => {
     lerror(e)
   })
@@ -141,7 +125,6 @@ const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
       await member.edit({ mute: false }).catch((e) => {
         lerror(e)
       })
-      member.roles.remove(mutedByAdhereRole)
     }
     // log("Second try for good measure")
   }, 1500)

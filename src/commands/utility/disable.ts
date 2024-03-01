@@ -7,7 +7,7 @@ import {
 } from "discord.js"
 import { getMutedRole } from "../../connections/mongoDb"
 
-const botName = process.env.DISCORD_BOT_NAME
+const botName = process.env.BOT_NAME
 
 export const disable = {
   command: new SlashCommandBuilder()

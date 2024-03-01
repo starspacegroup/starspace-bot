@@ -6,7 +6,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js"
 
-const botName = process.env.DISCORD_BOT_NAME
+const botName = process.env.BOT_NAME
 
 export const idiotRole = {
   command: new SlashCommandBuilder()
