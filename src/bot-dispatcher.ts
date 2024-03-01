@@ -2,6 +2,7 @@ import log, { lerror } from "./lib/logger"
 import * as dotenv from "dotenv"
 dotenv.config()
 const botToken = process.env.DISCORD_BOT_TOKEN
+const mongoDb = process.env.MONGO_DB
 
 import mongoClient, {
   getNumberSetting,
@@ -11,7 +12,7 @@ import VoiceChannelEvent from "./models/voiceChannelEvent"
 import { Client, GatewayIntentBits, Guild, GuildMember } from "discord.js"
 import { ChangeStreamInsertDocument } from "mongodb"
 
-const database = mongoClient.db("camera_on")
+const database = mongoClient.db(mongoDb)
 const discordClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 })

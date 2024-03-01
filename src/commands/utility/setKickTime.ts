@@ -8,6 +8,8 @@ import {
   SlashCommandBuilder,
 } from "discord.js"
 
+const mongoDb = process.env.MONGO_DB
+
 export const setkicktime = {
   command: new SlashCommandBuilder()
     .setName("setkicktime")
@@ -51,7 +53,7 @@ async function updateKickTime(
   interaction: CommandInteraction
 ) {
   try {
-    const database = mongoClient.db("camera_on")
+    const database = mongoClient.db(mongoDb)
     // @ts-ignore
     const numberSettings = database.collection<NumberSetting>("numberSettings")
     const result = await numberSettings.updateOne(

@@ -8,6 +8,7 @@ import { voiceStateEvent } from "./events/voiceState"
 import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
 import { insult } from "./commands/text/insult"
+import { affirmation } from "./commands/text/affirmation"
 
 import { botScheduler } from "./bot-dispatcher"
 botScheduler.run()
@@ -24,6 +25,7 @@ const commands = {
   enable,
   disable,
   insult,
+  affirmation,
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {

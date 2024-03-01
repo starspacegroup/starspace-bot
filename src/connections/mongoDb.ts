@@ -7,7 +7,6 @@ import { GuildMember, VoiceBasedChannel } from "discord.js"
 import log from "../lib/logger"
 import MemberMutedByBot from "../models/memberMutedByBot"
 import IdiotRole from "../models/idiotRole"
-import MutedRole from "../models/mutedRole"
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
@@ -41,26 +40,6 @@ export const setEnabledStatus = async (guildId: string, status: boolean) => {
       { upsert: true }
     )
   return result
-}
-
-export const setMutedRole = async (guildId: string, roleId: string) => {
-  const database = mongoClient.db(mongoDb)
-  const mutedRoles = database.collection<MutedRole>("mutedRole")
-  const result = await mutedRoles.updateOne(
-    {
-      guildId: guildId,
-    },
-    { $set: { roleId: roleId } },
-    { upsert: true }
-  )
-  return result
-}
-
-export const getMutedRole = async (guildId: string) => {
-  const database = mongoClient.db(mongoDb)
-  const mutedRoles = database.collection<MutedRole>("mutedRole")
-  const result = await mutedRoles.findOne({ guildId: guildId })
-  return result ? result.roleId : null
 }
 
 export const insertVoiceChannelEvent = async (

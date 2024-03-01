@@ -5,7 +5,6 @@ import {
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js"
-import { getMutedRole } from "../../connections/mongoDb"
 
 const botName = process.env.BOT_NAME
 

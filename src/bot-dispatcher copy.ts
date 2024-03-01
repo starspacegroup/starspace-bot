@@ -33,7 +33,8 @@ import { NumberSettingType } from "./models/numberSetting"
 let voiceConnection = []
 let currentMemberBeingWarned = []
 
-const database = mongoClient.db("camera_on")
+const botName = process.env.BOT_NAME
+const database = mongoClient.db(botName)
 const agenda = new Agenda({
   db: {
     address: `mongodb+srv://${mongoUser}:${mongoPass}@${mongoUrl}/${mongoDb}?retryWrites=true&w=majority`,
