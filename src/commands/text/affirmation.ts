@@ -24,7 +24,6 @@ export const affirmation = {
   },
 }
 
-// The preceeding text was originally published by Prawn Song Records at www.primussucks.com
 let Affirmations = [
   `You are beautiful, inside and out. Your inner light shines brightly, illuminating the world around you. I am proud of the person you are becoming.`,
   `You are capable of achieving anything you set your mind to. Your determination and perseverance know no bounds. I believe in your abilities wholeheartedly.`,
