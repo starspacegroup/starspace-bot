@@ -94,7 +94,7 @@ Affirmations.push.apply(Affirmations, [
   `Gratitude is a celebration we are all invited to.`,
   `We must be willing to let go of the life we planned so as to have the life that is waiting for us.`,
   `Nothing is impossible. The word itself says “I’m possible!”`,
-  `The only courage you ever need is the courage to fulfill the drams of your own life.`,
+  `The only courage you ever need is the courage to fulfill the dreams of your own life.`,
   `Failure is just another way to learn how to do something right.`,
   `The emotion that can break your heart is sometimes the very one that heals it.`,
   `Your crown has been bought and paid for. Put it on your head and wear it.`,
