@@ -43,5 +43,21 @@ let Affirmations = [
   `You are worthy of all the love and joy the universe has to offer. Open your heart to receive the abundance that surrounds you, knowing that you are infinitely deserving of life's greatest blessings.`,
 ]
 
-// Affirmations.push.apply(Affirmations, [
-// ])
+Affirmations.push.apply(Affirmations, [
+  `You are a beacon of positivity, radiating love and light to everyone you encounter. Your presence uplifts and inspires those around you, creating a ripple effect of joy and happiness.`,
+  `You are worthy of all the love and abundance the universe has to offer. Your heart is open to receiving blessings in all forms, and you welcome them with gratitude and appreciation.`,
+  `You are a magnet for miracles and miracles flow effortlessly into your life. Your unwavering faith and belief in the power of the universe align you with endless opportunities for growth and transformation.`,
+  `You are aligned with the rhythm of the universe, and everything unfolds for your highest good. Trusting in the divine timing of your life, you surrender to the flow and embrace each moment with grace and ease.`,
+  `You are a divine being, connected to the infinite wisdom of the cosmos. Your intuition is a guiding light, leading you towards your true purpose and destiny with clarity and confidence.`,
+  `You are a force of nature, capable of moving mountains with your strength and determination. Your resilience knows no bounds, and you overcome any obstacle with grace and courage.`,
+  `You are a shining star, illuminating the path for others with your brilliance and wisdom. Your unique gifts and talents are a blessing to the world, and you share them generously with others.`,
+  `You are a masterpiece, a work of art crafted with love and intention. Your beauty lies in your imperfections, and you embrace them as a reflection of your uniqueness and authenticity.`,
+  `You are a powerful creator, manifesting your dreams into reality with every thought and intention. Your imagination knows no limits, and you visualize your desires with clarity and conviction.`,
+  `You are a miracle in motion, moving through life with purpose and passion. Your journey is a testament to the resilience of the human spirit, and you embrace each experience as an opportunity for growth and expansion.`,
+  `You are a vessel of love and compassion, sharing your light with the world. Your kindness touches the hearts of those around you, bringing comfort and healing to those in need.`,
+  `You are a fountain of joy, bubbling with laughter and happiness. Your zest for life is contagious, and you spread smiles wherever you go, brightening even the darkest of days.`,
+  `You are a beacon of strength and courage, standing tall in the face of adversity. Your inner fortitude inspires others to find their own courage within, empowering them to overcome their challenges with grace and resilience.`,
+  `You are a miracle worker, turning obstacles into opportunities with your positive mindset and unwavering faith. Your belief in the power of possibility fuels your journey towards greatness, and you manifest miracles with ease and grace.`,
+  `You are a treasure trove of wisdom and insight, tapping into the vast reservoir of knowledge within. Your experiences are lessons to be learned, and you glean wisdom from every moment, enriching your life and the lives of those around you.`,
+  `You are a champion of love, spreading kindness and compassion wherever you go. Your heart is a beacon of light in a world of darkness, and you nurture connections that uplift and inspire others to be their best selves.`,
+])
