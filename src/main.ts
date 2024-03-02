@@ -24,7 +24,6 @@ client.on("voiceStateUpdate", voiceStateEvent)
 const commands = {
   enable,
   disable,
-  insult,
   affirmation,
 }
 

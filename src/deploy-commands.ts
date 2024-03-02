@@ -11,7 +11,7 @@ const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
 const token = process.env.DISCORD_BOT_TOKEN
 
-const commands = [enable, disable, insult, affirmation].map((command) =>
+const commands = [enable, disable, affirmation].map((command) =>
   command.command.toJSON()
 )
 
