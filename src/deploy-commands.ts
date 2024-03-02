@@ -1,7 +1,6 @@
 import { REST, Routes } from "discord.js"
 import * as dotenv from "dotenv"
 dotenv.config()
-import { insult } from "./commands/text/insult"
 import { affirmation } from "./commands/text/affirmation"
 import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"

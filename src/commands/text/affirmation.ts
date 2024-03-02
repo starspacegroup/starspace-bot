@@ -20,7 +20,9 @@ export const affirmation = {
     const randomAffirmation =
       Affirmations[Math.floor(Math.random() * Affirmations.length)]
     await interaction.reply(`${user} ${randomAffirmation}`)
-    log(`${user.tag} has been insulted in ${interaction.guild?.name}.`)
+    log(
+      `${interaction.user} used the /affirmation command in ${interaction.guild?.name} with ${user.tag}.`
+    )
   },
 }
 
