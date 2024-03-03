@@ -1,16 +1,17 @@
 import { REST, Routes } from "discord.js"
 import * as dotenv from "dotenv"
 dotenv.config()
-import { affirmation } from "./commands/text/affirmation"
 import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
+import { whymuted } from "./commands/text/whymuted"
+import { affirmation } from "./commands/text/affirmation"
 import log from "./lib/logger"
 
 const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
 const token = process.env.DISCORD_BOT_TOKEN
 
-const commands = [enable, disable, affirmation].map((command) =>
+const commands = [enable, disable, whymuted, affirmation].map((command) =>
   command.command.toJSON()
 )
 

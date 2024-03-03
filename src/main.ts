@@ -7,6 +7,7 @@ import { voiceStateEvent } from "./events/voiceState"
 
 import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
+import { whymuted } from "./commands/text/whymuted"
 import { affirmation } from "./commands/text/affirmation"
 
 import { botScheduler } from "./bot-dispatcher"
@@ -23,6 +24,7 @@ client.on("voiceStateUpdate", voiceStateEvent)
 const commands = {
   enable,
   disable,
+  whymuted,
   affirmation,
 }
 
