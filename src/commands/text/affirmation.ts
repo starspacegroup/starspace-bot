@@ -21,7 +21,7 @@ export const affirmation = {
       Affirmations[Math.floor(Math.random() * Affirmations.length)]
     await interaction.reply(`${user} ${randomAffirmation}`)
     log(
-      `${interaction.user} used the /affirmation command in ${interaction.guild?.name} with ${user.tag}.`
+      `${interaction.user.tag} used the /affirmation command in ${interaction.guild?.name} with ${user.tag}.`
     )
   },
 }
