@@ -17,7 +17,7 @@ export const whymuted = {
     // @ts-ignore
     const user = interaction.options.getUser("user") ?? interaction.user
     await interaction.reply(
-      `${user} We have a bot that mutes you in voice chat while your camera is turned off in certain voice channels. Turn on your camera to be automatically unmuted.`
+      `${user} We have a bot (that's me) which mutes you in voice chat while your camera is turned off in certain voice channels. Turn on your camera to be automatically unmuted. :)`
     )
     log(`Informed ${user.tag} of mute details in ${interaction.guild?.name}.`)
   },
