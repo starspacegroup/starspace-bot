@@ -7,6 +7,7 @@
     "Screenshare",
     "setkicktime",
     "settimeoutminutes",
-    "setwarntime"
+    "setwarntime",
+    "whymuted"
   ]
 }
