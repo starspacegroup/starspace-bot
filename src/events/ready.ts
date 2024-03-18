@@ -1,4 +1,3 @@
-import { Colors, PermissionFlagsBits } from "discord.js"
 import log, { lerror } from "../lib/logger"
 
 export function readyEvent(client) {
