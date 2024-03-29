@@ -4,7 +4,6 @@ import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
 import { GuildMember, VoiceBasedChannel } from "discord.js"
-import log from "../lib/logger"
 import MemberMutedByBot from "../models/memberMutedByBot"
 import IdiotRole from "../models/idiotRole"
 const mongoUser = process.env.MONGO_USER
