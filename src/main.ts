@@ -9,6 +9,7 @@ import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
 import { whymuted } from "./commands/text/whymuted"
 import { affirmation } from "./commands/text/affirmation"
+import { insult } from "./commands/text/insult"
 
 import { botScheduler } from "./bot-dispatcher"
 botScheduler.run()
@@ -26,6 +27,7 @@ const commands = {
   disable,
   whymuted,
   affirmation,
+  insult,
 }
 
 client.on(Events.InteractionCreate, async (interaction) => {

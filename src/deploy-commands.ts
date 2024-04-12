@@ -5,14 +5,15 @@ import { enable } from "./commands/utility/enable"
 import { disable } from "./commands/utility/disable"
 import { whymuted } from "./commands/text/whymuted"
 import { affirmation } from "./commands/text/affirmation"
+import { insult } from "./commands/text/insult"
 import log from "./lib/logger"
 
 const clientId = process.env.DISCORD_APP_ID
 const guildId = process.env.DISCORD_GUILD_ID
 const token = process.env.DISCORD_BOT_TOKEN
 
-const commands = [enable, disable, whymuted, affirmation].map((command) =>
-  command.command.toJSON()
+const commands = [enable, disable, whymuted, affirmation, insult].map(
+  (command) => command.command.toJSON()
 )
 
 // @ts-ignore
