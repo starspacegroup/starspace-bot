@@ -8,7 +8,7 @@ import {
 export const whymuted = {
   command: new SlashCommandBuilder()
     .setName("whymuted")
-    .setDescription("Lets the user know why they muted while cam is off.")
+    .setDescription("Lets the user know why they're muted while cam is off.")
     .addUserOption((option) =>
       option.setName("user").setDescription("The user to inform")
     )
