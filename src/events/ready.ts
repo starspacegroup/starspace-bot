@@ -1,4 +1,4 @@
-import log, { lerror } from "../lib/logger"
+import log from "../lib/logger"
 
 export function readyEvent(client) {
   log(`Ready! Logged in as ${client.user?.tag}`)

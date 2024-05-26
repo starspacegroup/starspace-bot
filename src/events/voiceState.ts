@@ -1,70 +1,7 @@
-import { insertVoiceChannelEvent } from "../connections/mongoDb"
-import { VoiceChannelAction } from "../models/voiceChannelEvent"
-
-import { GatewayIntentBits, VoiceState, GuildMember } from "discord.js"
 import log from "../lib/logger"
 
-const intents = [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates]
-
-// const resolveVoiceStateEventType = (
-//   member: GuildMember,
-//   oldState: VoiceState,
-//   newState: VoiceState
-// ) => {
-//   let eventType: VoiceChannelAction = "join"
-//   const oldChannel = oldState.channel
-//   const newChannel = newState.channel
-//   const oldCamState = oldState.selfVideo ? "on" : "off"
-//   const newCamState = newState.selfVideo ? "on" : "off"
-//   if (
-//     oldState.channel !== newState.channel &&
-//     member &&
-//     !oldChannel &&
-//     newChannel
-//   ) {
-//     eventType = "join"
-//   } else if (
-//     oldState.channel !== newState.channel &&
-//     member &&
-//     oldChannel &&
-//     !newChannel
-//   ) {
-//     eventType = "leave"
-//   } else if (
-//     oldState.channel == newState.channel &&
-//     newChannel &&
-//     member &&
-//     oldCamState !== newCamState &&
-//     !newState.selfVideo
-//   ) {
-//     eventType = "cameraOff"
-//   } else if (
-//     oldState.channel == newState.channel &&
-//     newChannel &&
-//     member &&
-//     oldCamState !== newCamState &&
-//     newState.selfVideo
-//   ) {
-//     eventType = "cameraOn"
-//   } else if (
-//     oldState.channel == newState.channel &&
-//     newChannel &&
-//     member &&
-//     oldCamState === newCamState &&
-//     !newState.selfVideo
-//   ) {
-//     eventType = "screenUnshared"
-//   } else if (
-//     oldState.channel == newState.channel &&
-//     newChannel &&
-//     member &&
-//     oldCamState === newCamState &&
-//     newState.selfVideo
-//   ) {
-//     eventType = "screenShared"
-//   }
-//   return eventType
-// }
+import { insertVoiceChannelEvent } from "../connections/mongoDb"
+import { VoiceState, GuildMember } from "discord.js"
 
 const memberMoved = (
   member: GuildMember,
