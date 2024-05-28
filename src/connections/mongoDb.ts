@@ -60,7 +60,26 @@ export const insertVoiceChannelEvent = async (
     action: action,
     timestamp: new Date(),
   })
+
   // log(`A document was inserted with the _id: ${result.insertedId}`)
+}
+
+export const setInvitesData = async (guildId: string, inviteData: object) => {
+  const database = mongoClient.db(mongoDb)
+  const invitesData = database.collection<InviteData>("invitesData")
+  const result = await invitesData.updateOne(
+    { guildId: guildId },
+    { $set: { invites: inviteData } },
+    { upsert: true }
+  )
+  return result
+}
+
+export const getInvitesData = async (guildId: string) => {
+  const database = mongoClient.db(mongoDb)
+  const invitesData = database.collection<InviteData>("invitesData")
+  const result = await invitesData.findOne({ guildId: guildId })
+  return result ? result.invites : {}
 }
 
 export const setMemberMutedByBot = async (
@@ -102,6 +121,7 @@ export const getNumberSetting = async (
     .findOne({ name: settingName, guildId: guildId })
   return result ? result.value : 0
 }
+
 export const getJoinTime = async () => {
   const database = mongoClient.db(mongoDb)
   // @ts-ignore
