@@ -5,7 +5,7 @@ import VoiceChannelEvent, {
 } from "../models/voiceChannelEvent"
 import { GuildMember, VoiceBasedChannel } from "discord.js"
 import MemberMutedByBot from "../models/memberMutedByBot"
-import IdiotRole from "../models/idiotRole"
+import InviteData from "../models/inviteData"
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
@@ -108,26 +108,6 @@ export const getJoinTime = async () => {
   const numberSettings = database.collection<TimeSetting>("numberSettings")
   const result = await numberSettings.findOne({ name: "botJoin" })
   return result.value
-}
-
-export const setIdiotRole = async (guildId: string, roleId: string) => {
-  const database = mongoClient.db(mongoDb)
-  const result = await database
-    .collection<IdiotRole>("idiotRole")
-    .updateOne(
-      { guildId: guildId },
-      { $set: { roleId: roleId } },
-      { upsert: true }
-    )
-  return result
-}
-
-export const getIdiotRole = async (guildId: string) => {
-  const database = mongoClient.db(mongoDb)
-  const result = await database
-    .collection<IdiotRole>("idiotRole")
-    .findOne({ guildId: guildId })
-  return result ? result.roleId : null
 }
 
 process.on("SIGINT", () => {
