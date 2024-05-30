@@ -5,7 +5,7 @@ import VoiceChannelEvent, {
 } from "../models/voiceChannelEvent"
 import { GuildMember, VoiceBasedChannel } from "discord.js"
 import MemberMutedByBot from "../models/memberMutedByBot"
-import InviteData from "../models/inviteData"
+import { InviteData } from "../models/inviteData"
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
@@ -79,7 +79,29 @@ export const getInvitesData = async (guildId: string) => {
   const database = mongoClient.db(mongoDb)
   const invitesData = database.collection<InviteData>("invitesData")
   const result = await invitesData.findOne({ guildId: guildId })
-  return result ? result.invites : {}
+
+  return result ? result.invites : []
+}
+
+export const incrementInvite = async (guildId: string, inviteId: string) => {
+  const database = mongoClient.db(mongoDb)
+  const invitesData = await database.collection<InviteData>("invitesData")
+  const inviteCount = await invitesData.findOne({ guildId: guildId })
+
+  if (inviteCount) {
+    const newInviteCount = inviteCount.invites[inviteId] + 1
+    const result = await invitesData.updateOne(
+      { guildId: guildId },
+      {
+        $set: {
+          invites: {
+            [inviteId]: newInviteCount,
+          },
+        },
+      },
+      { upsert: true }
+    )
+    return result
 }
 
 export const setMemberMutedByBot = async (
