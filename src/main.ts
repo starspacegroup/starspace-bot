@@ -11,6 +11,7 @@ import { disable } from "./commands/utility/disable"
 import { whymuted } from "./commands/text/whymuted"
 import { affirmation } from "./commands/text/affirmation"
 import { insult } from "./commands/text/insult"
+import { say } from "./commands/text/say"
 
 const commands = {
   enable,
@@ -18,6 +19,7 @@ const commands = {
   whymuted,
   affirmation,
   insult,
+  say,
 }
 
 import { botScheduler } from "./bot-dispatcher"
