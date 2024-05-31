@@ -1,8 +1,9 @@
-import { Client, Events, GatewayIntentBits } from "discord.js"
 import * as dotenv from "dotenv"
 dotenv.config()
-import { readyEvent } from "./events/ready"
+import { Client, Events, GatewayIntentBits } from "discord.js"
 
+import { guildMemberAddEvent, updateInvitesData } from "./events/guildJoin"
+import { readyEvent } from "./events/ready"
 import { voiceStateEvent } from "./events/voiceState"
 
 import { enable } from "./commands/utility/enable"
@@ -10,6 +11,14 @@ import { disable } from "./commands/utility/disable"
 import { whymuted } from "./commands/text/whymuted"
 import { affirmation } from "./commands/text/affirmation"
 import { insult } from "./commands/text/insult"
+
+const commands = {
+  enable,
+  disable,
+  whymuted,
+  affirmation,
+  insult,
+}
 
 import { botScheduler } from "./bot-dispatcher"
 botScheduler.run()
@@ -20,15 +29,10 @@ const client = new Client({
 })
 
 client.on("ready", readyEvent)
-client.on("voiceStateUpdate", voiceStateEvent)
+client.on("ready", updateInvitesData)
 
-const commands = {
-  enable,
-  disable,
-  whymuted,
-  affirmation,
-  insult,
-}
+client.on("voiceStateUpdate", voiceStateEvent)
+client.on("guildMemberAdd", guildMemberAddEvent)
 
 client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isChatInputCommand()) return

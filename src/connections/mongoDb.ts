@@ -61,7 +61,7 @@ export const insertVoiceChannelEvent = async (
     timestamp: new Date(),
   })
 
-  // log(`A document was inserted with the _id: ${result.insertedId}`)
+  return result
 }
 
 export const setInvitesData = async (guildId: string, inviteData: object) => {
@@ -80,7 +80,7 @@ export const getInvitesData = async (guildId: string) => {
   const invitesData = database.collection<InviteData>("invitesData")
   const result = await invitesData.findOne({ guildId: guildId })
 
-  return result ? result.invites : []
+  return result
 }
 
 export const incrementInvite = async (guildId: string, inviteId: string) => {
@@ -102,6 +102,9 @@ export const incrementInvite = async (guildId: string, inviteId: string) => {
       { upsert: true }
     )
     return result
+  } else {
+    return null
+  }
 }
 
 export const setMemberMutedByBot = async (
@@ -116,21 +119,6 @@ export const setMemberMutedByBot = async (
     { $set: { serverMuted: serverMuted } },
     { upsert: true }
   )
-  // log(`A document was inserted with the _id: ${result.insertedId}`)
-}
-
-export const getMemberMutedByBot = async (
-  guildId: string,
-  memberId: string
-) => {
-  const database = mongoClient.db(mongoDb)
-  const memberServerMuted =
-    database.collection<MemberMutedByBot>("memberMutedByBot")
-  const result = await memberServerMuted.findOne({
-    guildId: guildId,
-    memberId: memberId,
-  })
-  return result ? result.serverMuted : false
 }
 
 export const getNumberSetting = async (
@@ -142,14 +130,6 @@ export const getNumberSetting = async (
     .collection<NumberSetting>("numberSettings")
     .findOne({ name: settingName, guildId: guildId })
   return result ? result.value : 0
-}
-
-export const getJoinTime = async () => {
-  const database = mongoClient.db(mongoDb)
-  // @ts-ignore
-  const numberSettings = database.collection<TimeSetting>("numberSettings")
-  const result = await numberSettings.findOne({ name: "botJoin" })
-  return result.value
 }
 
 process.on("SIGINT", () => {
