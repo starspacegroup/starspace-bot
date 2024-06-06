@@ -11,7 +11,9 @@ const botName = process.env.BOT_NAME
 export const enable = {
   command: new SlashCommandBuilder()
     .setName("enable")
-    .setDescription(`Enable ${botName}.`)
+    .setDescription(
+      `Enable ${botName} voice channel camera requirement globally.`
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
