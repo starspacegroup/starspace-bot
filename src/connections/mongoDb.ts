@@ -121,6 +121,20 @@ export const setMemberMutedByBot = async (
   )
 }
 
+export const setNumberSetting = async (
+  settingName: NumberSettingType,
+  value: number,
+  guildId: string
+) => {
+  const database = mongoClient.db(mongoDb)
+  const numberSetting = database.collection<NumberSetting>("numberSettings")
+  const result = await numberSetting.updateOne(
+    { $inc: { guildId: guildId } },
+    { name: settingName, value: value },
+    { upsert: true }
+  )
+}
+
 export const getNumberSetting = async (
   settingName: NumberSettingType,
   guildId: string
