@@ -133,6 +133,8 @@ export const setNumberSetting = async (
     { name: settingName, value: value },
     { upsert: true }
   )
+
+  return result
 }
 
 export const getNumberSetting = async (
