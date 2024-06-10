@@ -29,11 +29,11 @@ const handleEvent = async (
     return
   }
   switch (action) {
-    case "join":
+    case "joinVoiceChannel":
     case "cameraOff":
       await serverMuteMember(guild, member)
       break
-    case "leave":
+    case "leaveVoiceChannel":
       // await serverUnmuteMember(guild, member)
       break
     case "cameraOn":

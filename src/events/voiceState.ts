@@ -140,12 +140,22 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
   }
   if (memberJoined(member, oldState, newState) && newState.channel) {
     log(`${newState.guild.name}: ${userName} joined ${newState.channel?.name}.`)
-    insertVoiceChannelEvent(guildId, member, newState.channel, "join")
+    insertVoiceChannelEvent(
+      guildId,
+      member,
+      newState.channel,
+      "joinVoiceChannel"
+    )
   }
 
   if (memberLeft(member, oldState, newState) && oldState.channel) {
     log(`${newState.guild.name}: ${userName} left ${oldState.channel?.name}.`)
-    insertVoiceChannelEvent(guildId, member, oldState.channel, "leave")
+    insertVoiceChannelEvent(
+      guildId,
+      member,
+      oldState.channel,
+      "leaveVoiceChannel"
+    )
   }
 
   if (
@@ -156,8 +166,18 @@ export function voiceStateEvent(oldState: VoiceState, newState: VoiceState) {
     log(
       `${newState.guild.name}: ${userName} moved from ${oldState.channel?.name} to ${newState.channel?.name}.`
     )
-    insertVoiceChannelEvent(guildId, member, oldState.channel, "leave")
-    insertVoiceChannelEvent(guildId, member, newState.channel, "join")
+    insertVoiceChannelEvent(
+      guildId,
+      member,
+      oldState.channel,
+      "leaveVoiceChannel"
+    )
+    insertVoiceChannelEvent(
+      guildId,
+      member,
+      newState.channel,
+      "joinVoiceChannel"
+    )
   }
 
   if (cameraDisabled(member, oldState, newState) && newState.channel) {

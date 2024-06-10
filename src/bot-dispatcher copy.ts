@@ -46,7 +46,10 @@ const discordClient = new Client({
 })
 discordClient.login(botToken)
 
-type DesiredAction = "turn on camera" | "stop screen sharing" | "leave"
+type DesiredAction =
+  | "turn on camera"
+  | "stop screen sharing"
+  | "leaveVoiceChannel"
 
 const createAgendaJobs = async () => {
   agenda.define("warn member", async (job) => {
@@ -96,10 +99,10 @@ export const to_my_event = (
 ) => {
   let myEvent = new MyEvent()
   switch (change.fullDocument.action) {
-    case "join":
+    case "joinVoiceChannel":
     case "cameraOff":
     case "cameraOn":
-    case "leave":
+    case "leaveVoiceChannel":
       myEvent.should_handle = true
       myEvent.desired_action = change.fullDocument.action
       break
@@ -160,15 +163,15 @@ export const botScheduler = {
           return
         }
         switch (action) {
-          case "join":
+          case "joinVoiceChannel":
           case "cameraOff":
             await triggerWarning(guild, channel, member, action)
             break
           case "screenShared":
             await triggerWarning(guild, channel, member, action)
             break
-          case "leave":
-            await crisisAverted(guild, channel, member, "leave")
+          case "leaveVoiceChannel":
+            await crisisAverted(guild, channel, member, "leaveVoiceChannel")
             break
           case "cameraOn":
             await crisisAverted(guild, channel, member, "turn on camera")
@@ -212,7 +215,7 @@ export const triggerWarning = async (
   let desiredAction: DesiredAction
   let numberSetting: NumberSettingType
   switch (action) {
-    case "join":
+    case "joinVoiceChannel":
     case "cameraOff":
       desiredAction = `turn on camera`
       numberSetting = "botJoinSecondsCamera"
@@ -253,7 +256,7 @@ const crisisAverted = async (
     voiceConnection[guild.id].disconnect()
     voiceConnection[guild.id] = null
   }
-  if (desiredAction == "leave") {
+  if (desiredAction == "leaveVoiceChannel") {
     await cancelJob(
       "warn member",
       guild,

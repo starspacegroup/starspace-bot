@@ -14,8 +14,8 @@ export default class VoiceChannelEvent {
 }
 
 export type VoiceChannelAction =
-  | "join"
-  | "leave"
+  | "joinVoiceChannel"
+  | "leaveVoiceChannel"
   | "cameraOn"
   | "cameraOff"
   | "screenShared"

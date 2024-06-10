@@ -6,6 +6,9 @@ import VoiceChannelEvent, {
 import { GuildMember, VoiceBasedChannel } from "discord.js"
 import MemberMutedByBot from "../models/memberMutedByBot"
 import { InviteData } from "../models/inviteData"
+import GuildJoinEvent from "../models/guildJoinEvent"
+import { LogType, LogChannelSetting } from "../models/logChannelSetting"
+
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
 const mongoDb = process.env.MONGO_DB
@@ -61,6 +64,22 @@ export const insertVoiceChannelEvent = async (
     timestamp: new Date(),
   })
 
+  return result
+}
+
+export const insertGuildJoinEvent = async (
+  guildId: string,
+  member: GuildMember,
+  inviteCode?: string
+) => {
+  const database = mongoClient.db(mongoDb)
+  const guildJoinEvent = database.collection<GuildJoinEvent>("guildJoinEvent")
+  const result = await guildJoinEvent.insertOne({
+    guildId: guildId,
+    memberId: member.id,
+    inviteCode: inviteCode ? inviteCode : "none",
+    timestamp: new Date(),
+  })
   return result
 }
 
@@ -145,6 +164,33 @@ export const getNumberSetting = async (
     .collection<NumberSetting>("numberSettings")
     .findOne({ name: settingName, guildId: guildId })
   return result ? result.value : 0
+}
+
+export const setLogChannelSetting = async (
+  guildId: string,
+  channelId: string,
+  logType: LogType
+) => {
+  const database = mongoClient.db(mongoDb)
+  const logChannelSetting =
+    database.collection<LogChannelSetting>("logChannelSetting")
+  const result = await logChannelSetting.updateOne(
+    { guildId: guildId },
+    { $set: { channelId: channelId, logType: logType } },
+    { upsert: true }
+  )
+  return result
+}
+
+export const getLogChannelSetting = async (
+  guildId: string,
+  logType: LogType
+) => {
+  const database = mongoClient.db(mongoDb)
+  const result = await database
+    .collection<LogChannelSetting>("logChannelSetting")
+    .findOne({ guildId: guildId, logType: logType })
+  return result
 }
 
 process.on("SIGINT", () => {

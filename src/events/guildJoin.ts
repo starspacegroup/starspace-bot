@@ -2,6 +2,7 @@ import { Client, GuildMember, Invite } from "discord.js"
 import {
   getInvitesData,
   incrementInvite,
+  insertGuildJoinEvent,
   setInvitesData,
 } from "../connections/mongoDb"
 import log from "../lib/logger"
@@ -35,23 +36,43 @@ export async function guildMemberAddEvent(member: GuildMember) {
   }
 
   if (inviteCodeUsed) {
+    insertGuildJoinEvent(guild.id, member, inviteCodeUsed)
     incrementInvite(guild.id, inviteCodeUsed)
+    log(
+      `[${guild.name}] ${member.user.tag} joined server with invite: ${inviteCodeUsed}.`
+    )
+  } else {
+    insertGuildJoinEvent(guild.id, member)
+    log(`[${guild.name}] ${member.user.tag} joined server without invite.`)
   }
 }
 
 export function updateInvitesData(client: Client) {
   client.guilds.cache.forEach(async (guild) => {
     log(`[${guild.name}] Updating invites...`)
-    const discordInvites = await guild.invites.fetch().catch((error) => {
-      log(`[${guild.name}] updateInvitesData ${error}`)
-      return []
-    })
-    const inviteData = {}
-    discordInvites.forEach((invite: Invite) => {
-      inviteData[invite.code] = invite.uses?.toString() || "0"
-    })
-    if (inviteData) {
-      setInvitesData(guild.id, inviteData)
-    }
+    const discordInvites = await guild.invites.cache.forEach(
+      (invite: Invite) => {
+        const inviteData = {}
+        inviteData[invite.code] = invite.uses?.toString() || "0"
+        if (inviteData) {
+          setInvitesData(guild.id, inviteData)
+        }
+      }
+    )
+    // await guild.invites
+    //   .fetch()
+    //   .then((discordInvites) => {
+    //     const inviteData = {}
+    //     discordInvites?.forEach((invite: Invite) => {
+    //       inviteData[invite.code] = invite.uses?.toString() || "0"
+    //     })
+    //     if (inviteData) {
+    //       setInvitesData(guild.id, inviteData)
+    //     }
+    //   })
+    //   .catch((error) => {
+    //     log(`[${guild.name}] updateInvitesData ${error}`)
+    //     return []
+    //   })
   })
 }

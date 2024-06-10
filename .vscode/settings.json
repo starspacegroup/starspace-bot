@@ -4,8 +4,11 @@
     "cameraon",
     "hokify",
     "lerror",
+    "logtype",
     "Screenshare",
+    "setchannel",
     "setkicktime",
+    "setlogchannel",
     "settimeoutminutes",
     "setwarntime",
     "whymuted"
