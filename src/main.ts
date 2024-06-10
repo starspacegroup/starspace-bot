@@ -6,28 +6,19 @@ import { guildMemberAddEvent, updateInvitesData } from "./events/guildJoin"
 import { readyEvent } from "./events/ready"
 import { voiceStateEvent } from "./events/voiceState"
 
-import { enable } from "./commands/utility/enable"
-import { disable } from "./commands/utility/disable"
-import { whymuted } from "./commands/text/whymuted"
-import { affirmation } from "./commands/text/affirmation"
-import { insult } from "./commands/text/insult"
-import { say } from "./commands/text/say"
-
-const commands = {
-  enable,
-  disable,
-  whymuted,
-  affirmation,
-  insult,
-  say,
-}
-
 import { botScheduler } from "./bot-dispatcher"
+import { activeCommands } from "./commands/activeCommands"
 botScheduler.run()
+
+const commands = activeCommands
 
 const botToken = process.env.DISCORD_BOT_TOKEN
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.GuildMembers,
+  ],
 })
 
 client.on("ready", readyEvent)
