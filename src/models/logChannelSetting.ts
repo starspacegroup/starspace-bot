@@ -19,3 +19,4 @@ export type LogType =
   | "voiceChannelStreamStart"
   | "voiceChannelStreamEnd"
   | "voiceChannelStreamPause"
+  | "All"

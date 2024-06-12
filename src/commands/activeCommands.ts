@@ -4,7 +4,7 @@ import { say } from "./text/say"
 import { whymuted } from "./text/whymuted"
 import { disable } from "./utility/disable"
 import { enable } from "./utility/enable"
-import { setLogChannel } from "./utility/setLogChannel"
+import { setlogchannel } from "./utility/setLogChannel"
 
 export const activeCommands = {
   enable,
@@ -13,7 +13,7 @@ export const activeCommands = {
   affirmation,
   insult,
   say,
-  setLogChannel,
+  setlogchannel,
 }
 
 export const activeCommandsList = Object.values(activeCommands)

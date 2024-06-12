@@ -6,9 +6,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js"
 
-const mongoDb = process.env.MONGO_DB
-
-export const setLogChannel = {
+export const setlogchannel = {
   command: new SlashCommandBuilder()
     .setName("setlogchannel")
     .setDescription("Channel to send log messages to")
@@ -34,8 +32,19 @@ export const setLogChannel = {
     const guild = interaction.guild
     const guildId = guild?.id || ""
     await interaction.deferReply()
-    await setLogChannelSetting(guildId, channel, logType)
-    interaction.reply(`Set log channel for ${logType} to ${channel}`)
-    log(`[${guild?.name}] Set log channel for ${logType} to ${channel}`)
+    await setLogChannelSetting(guildId, channel.id, logType)
+      .then(async () => {
+        await interaction.editReply(
+          `Set log channel for ${logType} to ${channel}`
+        )
+        await interaction.editReply(
+          `Set log channel for ${logType} to ${channel}`
+        )
+        log(`[${guild?.name}] Set log channel for ${logType} to ${channel}`)
+      })
+      .catch(async (err) => {
+        await interaction.editReply(`Error updating log channel ${err}.`)
+        log(err)
+      })
   },
 }

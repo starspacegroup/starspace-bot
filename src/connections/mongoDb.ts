@@ -3,9 +3,9 @@ import NumberSetting, { NumberSettingType } from "../models/numberSetting"
 import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
-import { GuildMember, VoiceBasedChannel } from "discord.js"
+import { GuildMember, Invite, VoiceBasedChannel } from "discord.js"
 import MemberMutedByBot from "../models/memberMutedByBot"
-import { InviteData } from "../models/inviteData"
+import { GuildInviteData, InviteData } from "../models/inviteData"
 import GuildJoinEvent from "../models/guildJoinEvent"
 import { LogType, LogChannelSetting } from "../models/logChannelSetting"
 
@@ -97,32 +97,35 @@ export const setInvitesData = async (guildId: string, inviteData: object) => {
 export const getInvitesData = async (guildId: string) => {
   const database = mongoClient.db(mongoDb)
   const invitesData = database.collection<InviteData>("invitesData")
-  const result = await invitesData.findOne({ guildId: guildId })
+  const result = await invitesData.findOne({
+    guildId: guildId,
+  })
 
   return result
 }
 
-export const incrementInvite = async (guildId: string, inviteId: string) => {
+export const incrementInvite = async (guildId: string, code: string) => {
   const database = mongoClient.db(mongoDb)
-  const invitesData = await database.collection<InviteData>("invitesData")
-  const inviteCount = await invitesData.findOne({ guildId: guildId })
+  const invitesData = database.collection<InviteData>("invitesData")
+  const inviteCount = await invitesData.findOne({
+    guildId: guildId,
+    "invites.code": code,
+  })
 
   if (inviteCount) {
-    const newInviteCount = inviteCount.invites[inviteId] + 1
+    const newInviteCount = inviteCount.invites[code] + 1
     const result = await invitesData.updateOne(
-      { guildId: guildId },
+      { guildId: guildId, "invites.code": code },
       {
         $set: {
-          invites: {
-            [inviteId]: newInviteCount,
-          },
+          "invites.uses": newInviteCount,
         },
       },
       { upsert: true }
     )
     return result
   } else {
-    return null
+    return undefined
   }
 }
 
@@ -173,7 +176,7 @@ export const setLogChannelSetting = async (
 ) => {
   const database = mongoClient.db(mongoDb)
   const logChannelSetting =
-    database.collection<LogChannelSetting>("logChannelSetting")
+    database.collection<LogChannelSetting>("logChannelSettings")
   const result = await logChannelSetting.updateOne(
     { guildId: guildId },
     { $set: { channelId: channelId, logType: logType } },
