@@ -25,7 +25,7 @@ const handleEvent = async (
 ) => {
   const enabledOnServer = await getNumberSetting("enabledOnServer", guild.id)
   if (!enabledOnServer) {
-    log(`${guild.name}: Bot is not enabled on server.`)
+    log(`${guild.name}: Camera requirement not enabled on server.`)
     return
   }
   switch (action) {
