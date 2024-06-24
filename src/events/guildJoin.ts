@@ -7,24 +7,35 @@ import {
   setInvitesData,
 } from "../connections/mongoDb"
 import log from "../lib/logger"
+import { InviteData } from "../models/inviteData"
 
 export async function guildMemberAddEvent(member: GuildMember) {
-  const codeUsed = await inferInviteCodeUsed(member)
-  await sendChannelMessage(
-    member.guild,
-    `[${member.guild.name}] ${member.user.username}#${member.user.discriminator} joined the server.`
-  )
+  setTimeout(async () => {
+    const codeUsed = await inferInviteCodeUsed(member)
+    await sendChannelMessage(
+      member.guild,
+      `[${member.guild.name}] ${member.user.username}#${member.user.discriminator} joined the server.`
+    )
+  }, 60 * 1000 * 9)
 }
 
 async function sendChannelMessage(guild: Guild, message: string) {
-  await getLogChannelSetting(guild.id, "All").then(async (setting) => {
-    if (setting?.channelId) {
-      const channel = guild.channels.cache.get(
-        setting?.channelId
-      ) as TextChannel
-      await channel.send(message)
-    }
-  })
+  await getLogChannelSetting(guild.id, "All")
+    .then(async (setting) => {
+      if (setting?.channelId) {
+        const channel = guild.channels.cache.get(
+          setting?.channelId
+        ) as TextChannel
+        await channel.send(message).catch((err) => {
+          log(
+            `[${guild.name}] Error sending message in ${channel.name}: ${err}`
+          )
+        })
+      }
+    })
+    .catch((err) => {
+      log(`[${guild.name}] Error getting log channel setting: ${err}`)
+    })
 }
 
 async function inferInviteCodeUsed(member: GuildMember) {
@@ -32,20 +43,18 @@ async function inferInviteCodeUsed(member: GuildMember) {
   let inviteCodeUsed: string | undefined = undefined
 
   // Fetch all previous invites for the guild
-  const storedInviteData = await getInvitesData(guild.id)
-
-  if (storedInviteData) {
-    const storedInvites = storedInviteData.invites.invites
-    log(`[${guild.name}] guildMemberAddEvent ${storedInviteData.toString()}`)
-
-    storedInvites.forEach(async (storedInvite) => {
+  await getInvitesData(guild.id).then((data) => {
+    log(`${guild.name} has ${data?.length || 0} stored invites.`)
+    data.forEach(async (storedInvite) => {
       await guild.invites
         .fetch(storedInvite.code)
         .then((discordInvite: Invite) => {
           const newInviteCount = discordInvite.uses ? discordInvite.uses : 0
           const storedInviteCount = storedInvite.uses ? storedInvite.uses : 0
+          log(
+            `[${guild.name}] Invite code (${storedInvite.code}) Stored: ${storedInviteCount}, Discord: ${newInviteCount}.`
+          )
           if (storedInviteCount < newInviteCount) {
-            // Inferring that code was used because Discord is reporting more uses of this code than we have in stored data.
             inviteCodeUsed = discordInvite.code
             console.log(
               `${member.user.tag} joined using invite code: ${discordInvite.code}`
@@ -57,7 +66,7 @@ async function inferInviteCodeUsed(member: GuildMember) {
           return []
         })
     })
-  }
+  })
 
   if (inviteCodeUsed) {
     insertGuildJoinEvent(guild.id, member, inviteCodeUsed)
@@ -79,9 +88,9 @@ export function updateInvitesData(client: Client) {
 
     const discordInvites = await guild.invites.fetch()
     const inviteData = discordInvites.map((invite) => ({
-      code: invite.code,
+      code: invite.code ?? "",
       uses: invite.uses ?? 0,
-      inviter: invite.inviter ?? "unknown",
+      inviter: invite.inviter,
       expiresAt: invite.expiresAt,
     }))
 

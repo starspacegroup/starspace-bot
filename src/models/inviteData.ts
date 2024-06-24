@@ -1,14 +1,17 @@
 import { Guild } from "discord.js"
 import { ObjectId } from "mongodb"
 
-export type InviteData = {
-  [guildId: string]: { invites: [GuildInviteData] }
+export type GuildInviteData = {
+  guildId: string
+  invites: InvitesData
 }
 
-export type GuildInviteData = {
+export type InvitesData = [InviteData]
+
+export type InviteData = {
   code: string
   uses: number
-  expires: Date
-  creator: string
+  expires: Date | null
+  creator: string | null
   id?: ObjectId
 }

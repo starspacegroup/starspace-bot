@@ -3,11 +3,12 @@ import NumberSetting, { NumberSettingType } from "../models/numberSetting"
 import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
-import { GuildMember, Invite, VoiceBasedChannel } from "discord.js"
+import { Collection, GuildMember, Invite, VoiceBasedChannel } from "discord.js"
 import MemberMutedByBot from "../models/memberMutedByBot"
-import { GuildInviteData, InviteData } from "../models/inviteData"
+import { GuildInviteData, InviteData, InvitesData } from "../models/inviteData"
 import GuildJoinEvent from "../models/guildJoinEvent"
 import { LogType, LogChannelSetting } from "../models/logChannelSetting"
+import log from "../lib/logger"
 
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
@@ -83,12 +84,12 @@ export const insertGuildJoinEvent = async (
   return result
 }
 
-export const setInvitesData = async (guildId: string, inviteData: object) => {
+export const setInvitesData = async (guildId: string, discordInvitesData) => {
   const database = mongoClient.db(mongoDb)
   const invitesData = database.collection<InviteData>("invitesData")
   const result = await invitesData.updateOne(
     { guildId: guildId },
-    { $set: { invites: inviteData } },
+    { $set: { invites: discordInvitesData } },
     { upsert: true }
   )
   return result
@@ -96,12 +97,9 @@ export const setInvitesData = async (guildId: string, inviteData: object) => {
 
 export const getInvitesData = async (guildId: string) => {
   const database = mongoClient.db(mongoDb)
-  const invitesData = database.collection<InviteData>("invitesData")
-  const result = await invitesData.findOne({
-    guildId: guildId,
-  })
-
-  return result
+  const invitesData = database.collection<GuildInviteData>("invitesData")
+  const result = await invitesData.findOne({ guildId: guildId })
+  return result?.invites || []
 }
 
 export const incrementInvite = async (guildId: string, code: string) => {
@@ -113,7 +111,7 @@ export const incrementInvite = async (guildId: string, code: string) => {
   })
 
   if (inviteCount) {
-    const newInviteCount = inviteCount.invites[code] + 1
+    const newInviteCount = inviteCount[code] + 1
     const result = await invitesData.updateOne(
       { guildId: guildId, "invites.code": code },
       {
