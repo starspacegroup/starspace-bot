@@ -31,6 +31,10 @@ async function sendChannelMessage(guild: Guild, message: string) {
             `[${guild.name}] Error sending message in ${channel.name}: ${err}`
           )
         })
+      } else {
+        log(
+          `[${guild.name}] Couldn't get channel ID from setting. Message not sent.`
+        )
       }
     })
     .catch((err) => {
