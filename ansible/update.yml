@@ -6,16 +6,21 @@
     the_user: "{{ ansible_user_id }}"
   tasks:
     - name: Pull repo
-      become: yes
-      shell: >
-        cd {{ bot_name }} && git pull
+      become: no
+      git:
+        repo: "{{ bot_repo }}"
+        dest: "{{ ansible_env.HOME }}/{{ bot_name }}"
+        update: yes
+      register: git_pull
 
     - name: Rebuild bot
-      become: yes
+      become: no
       shell: >
         . {{ ansible_env.HOME }}/.nvm/nvm.sh && cd {{ bot_name }} && yarn build
+      when: git_pull.after != git_pull.before
 
     - name: Restart app
       become: yes
       shell: >
         systemctl restart {{ bot_name }}
+      when: git_pull.after != git_pull.before
