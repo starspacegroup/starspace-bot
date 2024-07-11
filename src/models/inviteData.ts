@@ -1,4 +1,3 @@
-import { Guild } from "discord.js"
 import { ObjectId } from "mongodb"
 
 export type GuildInviteData = {
