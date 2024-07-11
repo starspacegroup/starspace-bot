@@ -1,0 +1,155 @@
+---
+- name: Setup AWS Amazon Linux Instance
+  hosts: all
+  become: no
+  vars:
+    the_user: "{{ ansible_user_id }}"
+    node_version: 20.15.1
+  tasks:
+    - name: Install required packages
+      become: yes
+      yum:
+        name:
+          - git
+          - zsh
+        state: present
+      tags:
+        - system
+
+    - name: Download Oh My Zsh installation script
+      become: yes
+      get_url:
+        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+        dest: /tmp/install_ohmyzsh.sh
+      tags:
+        - system
+
+    - name: Run Oh My Zsh installation script
+      become: yes
+      command: sh /tmp/install_ohmyzsh.sh --unattended
+      register: ohmyzsh_result
+      failed_when: "'FAILED' in ohmyzsh_result.stderr"
+      tags:
+        - system
+
+    - name: Set zsh as default shell for user
+      become: yes
+      user:
+        name: "{{ the_user }}"
+        shell: /bin/zsh
+      tags:
+        - system
+
+    - name: Download z command
+      get_url:
+        url: https://raw.githubusercontent.com/rupa/z/master/z.sh
+        dest: ~/z.sh
+      tags:
+        - system
+
+    - name: Add z command to zshrc
+      ansible.builtin.lineinfile:
+        path: ~/.zshrc
+        line: ". ~/z.sh"
+        create: yes
+      tags:
+        - system
+
+    - name: Install nvm
+      become: yes
+      ansible.builtin.shell: >
+        curl -o- https://raw.githubusercontent.com/creationix/nvm/v0.39.1/install.sh | bash
+      args:
+        executable: /bin/bash
+        chdir: "$HOME"
+        creates: "$HOME/.nvm/nvm.sh"
+      tags:
+        - node
+
+    - name: Add nvm command to zshrc
+      ansible.builtin.lineinfile:
+        path: ~/.zshrc
+        line: ". {{ ansible_env.HOME }}/.nvm/nvm.sh"
+        create: yes
+      tags:
+        - node
+
+    - name: Install node
+      become: yes
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm install {{ node_version }}
+      args:
+        executable: /bin/bash
+        chdir: "{{ ansible_env.HOME }}"
+        creates: "{{ ansible_env.HOME }}/.nvm/versions/node/{{ node_version }}"
+      tags:
+        - node
+
+    - name: Set default node version
+      become: yes
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && nvm alias default {{ node_version }}
+      tags:
+        - node
+
+    - name: Install yarn
+      become: yes
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && npm install -g yarn
+      tags:
+        - node
+        - yarn
+
+    - name: Clone bot repo
+      become: yes
+      git:
+        repo: "{{ bot_repo }}"
+        dest: "{{ ansible_env.HOME }}/{{ bot_name }}"
+      tags:
+        - project
+
+    - name: Copy env file
+      become: yes
+      copy:
+        src: ../.env
+        dest: "{{ ansible_env.HOME }}/{{ bot_name }}/.env"
+      tags:
+        - project
+        - env
+
+    - name: Install bot dependencies with Yarn
+      become: yes
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && cd {{ ansible_env.HOME }}/{{ bot_name }} && yarn install
+      tags:
+        - project
+
+    - name: Build bot
+      become: yes
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && cd {{ ansible_env.HOME }}/{{ bot_name }} && yarn build
+      tags:
+        - project
+
+    - name: Create systemd service
+      become: yes
+      ansible.builtin.template:
+        src: ../systemd.service.j2
+        dest: /etc/systemd/system/{{ bot_name }}.service
+      tags:
+        - project
+
+    - name: Start systemd service on boot
+      become: yes
+      shell: >
+        systemctl enable {{ bot_name }}
+      tags:
+        - project
+
+    - name: Start systemd service now
+      become: yes
+      shell: >
+        systemctl start {{ bot_name }}
+      tags:
+        - project
+        - start
