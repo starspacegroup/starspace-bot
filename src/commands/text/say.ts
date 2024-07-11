@@ -27,7 +27,10 @@ export const say = {
     const channel = interaction.options.get("channel")?.channel
     const message = interaction.options.get("message")
     if (channel?.type !== ChannelType.GuildText) {
-      await interaction.reply("This command can only be used in text channels.")
+      await interaction.reply({
+        content: "This command can only be used in text channels.",
+        ephemeral: true,
+      })
       return
     }
 
@@ -36,7 +39,10 @@ export const say = {
       messageChannel.send(`${message?.value}`)
     }
 
-    await interaction.reply(`Sent message in ${channel}`)
+    await interaction.reply({
+      content: `Sent message in ${channel}`,
+      ephemeral: true,
+    })
 
     log(
       `[${interaction.guild?.name}] Sent message "${interaction.options.get(
