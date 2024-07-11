@@ -1,4 +1,11 @@
-import { Client, Guild, GuildMember, Invite, TextChannel } from "discord.js"
+import {
+  Client,
+  Guild,
+  GuildMember,
+  GuildTextBasedChannel,
+  Invite,
+  TextChannel,
+} from "discord.js"
 import {
   getInvitesData,
   getLogChannelSetting,
@@ -25,7 +32,7 @@ async function sendChannelMessage(guild: Guild, message: string) {
       if (setting?.channelId) {
         const channel = guild.channels.cache.get(
           setting?.channelId
-        ) as TextChannel
+        ) as GuildTextBasedChannel
         await channel.send(message).catch((err) => {
           log(
             `[${guild.name}] Error sending message in ${channel.name}: ${err}`
