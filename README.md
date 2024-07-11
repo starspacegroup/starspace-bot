@@ -18,7 +18,8 @@
 If you have Ansible you can use the Ansible playbooks in the `ansible` folder to deploy the bot to AWS and trigger update/restart (assuming you have an existing AWS ec2 instance with Amazon Linux).
 
 - Copy the ansible/hosts.ini.example file to ansible/hosts.ini and fill in the variables
-- Run `yarn ansible-setup` to provision the server and get the bot running in production
+- Run `yarn ansible-setup` to provision the server
+- Run `yarn ansible-deploy` to pull the bot code to the server and run it
 - Run `yarn ansible-update` to update the bot and restart it
 
 ### Manually:
