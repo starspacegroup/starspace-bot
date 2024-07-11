@@ -21,11 +21,15 @@ export const say = {
         .setName("channel")
         .setDescription("The channel to send the message in.")
     )
+    .addUserOption((option) =>
+      option.setName("user").setDescription("The user to send the message as.")
+    )
     .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
   async execute(interaction: CommandInteraction) {
     // @ts-ignore
     const channel = interaction.options.get("channel")?.channel
     const message = interaction.options.get("message")
+    const user = interaction.options.get("user")?.user
     if (channel?.type !== ChannelType.GuildText) {
       await interaction.reply({
         content: "This command can only be used in text channels.",
@@ -36,11 +40,15 @@ export const say = {
 
     const messageChannel = interaction.guild?.channels.cache.get(channel.id)
     if (messageChannel && messageChannel.type == ChannelType.GuildText) {
-      messageChannel.send(`${message?.value}`)
+      messageChannel.send(
+        user ? `${user}: ${message?.value}` : `${message?.value}`
+      )
     }
 
     await interaction.reply({
-      content: `Sent message in ${channel}`,
+      content: user
+        ? `Sent message in ${channel} to ${user}`
+        : `Sent message in ${channel}`,
       ephemeral: true,
     })
 

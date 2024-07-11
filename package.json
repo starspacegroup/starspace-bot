@@ -13,7 +13,9 @@
     "test": "npx jest --detectOpenHandles",
     "ansible-setup": "cd ansible && ansible-playbook -i hosts.ini setup.yml",
     "ansible-deploy": "cd ansible && ansible-playbook -i hosts.ini deploy.yml",
-    "ansible-update": "cd ansible && ansible-playbook -i hosts.ini update.yml"
+    "ansible-update": "cd ansible && ansible-playbook -i hosts.ini update.yml",
+    "ansible-start": "cd ansible && ansible-playbook -i hosts.ini start.yml",
+    "ansible-stop": "cd ansible && ansible-playbook -i hosts.ini stop.yml"
   },
   "author": "davis9001",
   "license": "ISC",
