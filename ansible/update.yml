@@ -11,6 +11,7 @@
         repo: "{{ bot_repo }}"
         dest: "{{ ansible_env.HOME }}/{{ bot_name }}"
         update: yes
+        force: true
       register: git_pull
 
     - name: Rebuild bot
