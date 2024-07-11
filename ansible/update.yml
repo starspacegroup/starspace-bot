@@ -1,0 +1,21 @@
+---
+- name: Pull repo and restart app
+  hosts: all
+  become: no
+  vars:
+    the_user: "{{ ansible_user_id }}"
+  tasks:
+    - name: Pull repo
+      become: yes
+      shell: >
+        cd {{ bot_name }} && git pull
+
+    - name: Rebuild bot
+      become: yes
+      shell: >
+        . {{ ansible_env.HOME }}/.nvm/nvm.sh && cd {{ bot_name }} && yarn build
+
+    - name: Restart app
+      become: yes
+      shell: >
+        systemctl restart {{ bot_name }}

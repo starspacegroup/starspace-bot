@@ -10,7 +10,9 @@
     "tsc": "tsc",
     "postinstall": "yarn run build",
     "deployCommands": "yarn build && node -r dotenv/config dist/deploy-commands.js",
-    "test": "npx jest --detectOpenHandles"
+    "test": "npx jest --detectOpenHandles",
+    "ansible-setup": "cd ansible && ansible-playbook -i hosts.ini setup.yml",
+    "ansible-update": "cd ansible && ansible-playbook -i hosts.ini update.yml"
   },
   "author": "davis9001",
   "license": "ISC",

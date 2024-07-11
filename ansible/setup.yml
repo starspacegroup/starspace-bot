@@ -101,7 +101,7 @@
         - yarn
 
     - name: Clone bot repo
-      become: yes
+      become: no
       git:
         repo: "{{ bot_repo }}"
         dest: "{{ ansible_env.HOME }}/{{ bot_name }}"
@@ -109,7 +109,7 @@
         - project
 
     - name: Copy env file
-      become: yes
+      become: no
       copy:
         src: ../.env
         dest: "{{ ansible_env.HOME }}/{{ bot_name }}/.env"
@@ -118,14 +118,14 @@
         - env
 
     - name: Install bot dependencies with Yarn
-      become: yes
+      become: no
       shell: >
         . {{ ansible_env.HOME }}/.nvm/nvm.sh && cd {{ ansible_env.HOME }}/{{ bot_name }} && yarn install
       tags:
         - project
 
     - name: Build bot
-      become: yes
+      become: no
       shell: >
         . {{ ansible_env.HOME }}/.nvm/nvm.sh && cd {{ ansible_env.HOME }}/{{ bot_name }} && yarn build
       tags:

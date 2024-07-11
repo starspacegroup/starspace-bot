@@ -11,6 +11,16 @@
 
 ## Deploying your own bot:
 
+### With Ansible:
+
+If you have Ansible you can use the Ansible playbooks in the `ansible` folder to deploy the bot to AWS and trigger update/restart (assuming you have an existing AWS ec2 instance with Amazon Linux).
+
+- Copy the ansible/hosts.ini.example file to ansible/hosts.ini and fill in the variables
+- Run `yarn ansible-setup` to provision the server and get the bot running in production
+- Run `yarn ansible-update` to update the bot and restart it
+
+### Manually:
+
 - Copy or clone this repo
 - Create a mongodb instance somewhere, you can get a free one that should work for a while at mongodb.com
 - Create a new AWS account (if you want to use AWS free tier EC2 for a year)
