@@ -1,0 +1,16 @@
+# For system-wide service (/etc/systemd/system/{{ bot_name }}.service)
+[Unit]
+Description={{ bot_name_proper }} Discord Bot
+
+[Service]
+ExecStart=/home/ec2-user/.nvm/versions/node/v{{ node_version }}/bin/yarn start
+WorkingDirectory=/home/ec2-user/{{ bot_name }}
+Restart=always
+RestartSec=1
+User=ec2-user
+Group=ec2-user
+Environment=PATH=/usr/local/bin:/usr/bin:/bin:/home/ec2-user/{{ bot_name }}/node_modules/.bin:/home/ec2-user/.nvm/versions/node/v{{ node_version }}/bin
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=default.target
