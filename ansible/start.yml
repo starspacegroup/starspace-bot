@@ -3,12 +3,12 @@
   hosts: all
   become: no
   tasks:
-    - name: Start systemd service on boot
-      become: yes
-      shell: >
-        systemctl enable {{ bot_name }}
-
     - name: Start systemd service now
       become: yes
       shell: >
         systemctl start {{ bot_name }}
+
+    - name: Start systemd service on boot
+      become: yes
+      shell: >
+        systemctl enable {{ bot_name }}
