@@ -1,13 +1,15 @@
-## External requirements:
+## Requirements:
 
 - MongoDB
+- AWS Amazon Linux ec2 instance (or equivalent)
+  - Node 20+
 
-## Getting started:
+## Local development:
 
 - Rename or copy .env-example to .env
 - Add discord bot token etc...
-- Run `yarn build`
-- Run `yarn start`
+- Run `yarn build` to build
+- Run `yarn start` to run
 
 ## Deploying your own bot:
 
