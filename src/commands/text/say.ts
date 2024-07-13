@@ -53,9 +53,9 @@ export const say = {
     })
 
     log(
-      `[${interaction.guild?.name}] Sent message "${interaction.options.get(
-        "message"
-      )}" to ${channel}`
+      user
+        ? `[${interaction.guild?.name}] Sent message "${message?.value}" in ${channel.name} to ${user?.displayName} from ${interaction.user.displayName}`
+        : `[${interaction.guild?.name}] Sent message "${message?.value}" in ${channel.name} from ${interaction.user.displayName}`
     )
   },
 }
