@@ -1,3 +1,4 @@
+import { fortyTwo } from "./text/42"
 import { affirmation } from "./text/affirmation"
 import { insult } from "./text/insult"
 import { say } from "./text/say"
@@ -14,6 +15,7 @@ export const activeCommands = {
   insult,
   say,
   setlogchannel,
+  fortyTwo,
 }
 
 export const activeCommandsList = Object.values(activeCommands)
