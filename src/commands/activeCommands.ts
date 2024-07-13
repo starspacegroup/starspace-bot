@@ -1,4 +1,4 @@
-import { fortyTwo } from "./text/42"
+import { fortyTwo } from "./text/fortyTwo"
 import { affirmation } from "./text/affirmation"
 import { insult } from "./text/insult"
 import { say } from "./text/say"

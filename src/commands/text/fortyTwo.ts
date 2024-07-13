@@ -11,7 +11,9 @@ export const fortyTwo = {
     .setDescription("Gives response.")
     .setDefaultMemberPermissions(PermissionFlagsBits.SendMessages),
   async execute(interaction: CommandInteraction) {
-    await interaction.reply("32")
-    log(`42 command executed by ${interaction.user.tag}`)
+    await interaction.reply({ content: "32" })
+    log(
+      `[${interaction.guild?.name}] 42 command executed by ${interaction.user.tag}`
+    )
   },
 }
