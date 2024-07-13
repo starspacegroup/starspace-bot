@@ -14,7 +14,6 @@ import {
   setInvitesData,
 } from "../connections/mongoDb"
 import log from "../lib/logger"
-import { InviteData } from "../models/inviteData"
 
 export async function guildMemberAddEvent(member: GuildMember) {
   setTimeout(async () => {

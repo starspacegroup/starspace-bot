@@ -1,14 +1,13 @@
 import { MongoClient, ServerApiVersion } from "mongodb"
 import NumberSetting, { NumberSettingType } from "../models/numberSetting"
+import LogChannelSetting, { LogType } from "../models/logChannelSetting"
+import MemberMutedByBot from "../models/memberMutedByBot"
+import GuildJoinEvent from "../models/guildJoinEvent"
 import VoiceChannelEvent, {
   VoiceChannelAction,
 } from "../models/voiceChannelEvent"
-import { Collection, GuildMember, Invite, VoiceBasedChannel } from "discord.js"
-import MemberMutedByBot from "../models/memberMutedByBot"
-import { GuildInviteData, InviteData, InvitesData } from "../models/inviteData"
-import GuildJoinEvent from "../models/guildJoinEvent"
-import { LogType, LogChannelSetting } from "../models/logChannelSetting"
-import log from "../lib/logger"
+import { GuildMember, VoiceBasedChannel } from "discord.js"
+import { GuildInviteData, InviteData } from "../models/inviteData"
 
 const mongoUser = process.env.MONGO_USER
 const mongoPass = process.env.MONGO_PASS
