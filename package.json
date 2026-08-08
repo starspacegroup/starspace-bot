@@ -19,6 +19,10 @@
   },
   "author": "davis9001",
   "license": "ISC",
+  "packageManager": "yarn@1.22.22",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@discordjs/voice": "^0.17.0",
     "@ffmpeg/core": "^0.12.4",
@@ -29,9 +33,7 @@
     "dotenv": "^16.3.1",
     "ffmpeg-static": "^5.2.0",
     "libsodium-wrappers": "^0.7.11",
-    "mongodb": "^4",
-    "tsc": "^2.0.4",
-    "tsconfig": "^7.0.0"
+    "mongodb": "^4"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
