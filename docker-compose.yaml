@@ -6,15 +6,7 @@ services:
   #     context: .
   #     dockerfile: Dockerfile.bot
   #   depends_on:
-  #     - redis
   #     - mongodb
-
-  redis:
-    build:
-      context: .
-      dockerfile: Dockerfile.redis
-    ports:
-      - "6379:6379"
 
   mongodb:
     build:

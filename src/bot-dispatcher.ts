@@ -11,36 +11,13 @@ import mongoClient, {
 import VoiceChannelEvent from "./models/voiceChannelEvent"
 import { Client, GatewayIntentBits, Guild, GuildMember } from "discord.js"
 import { ChangeStreamInsertDocument } from "mongodb"
+import { dispatchVoiceChannelEvent } from "./voice-event-dispatcher"
 
 const database = mongoClient.db(mongoDb)
 const discordClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates],
 })
 discordClient.login(botToken)
-
-const handleEvent = async (
-  guild: Guild,
-  member: GuildMember,
-  action: string
-) => {
-  const enabledOnServer = await getNumberSetting("enabledOnServer", guild.id)
-  if (!enabledOnServer) {
-    log(`${guild.name}: Camera requirement not enabled on server.`)
-    return
-  }
-  switch (action) {
-    case "joinVoiceChannel":
-    case "cameraOff":
-      await serverMuteMember(guild, member)
-      break
-    case "leaveVoiceChannel":
-      // await serverUnmuteMember(guild, member)
-      break
-    case "cameraOn":
-      await serverUnmuteMember(guild, member)
-      break
-  }
-}
 
 export const botScheduler = {
   async run() {
@@ -50,25 +27,20 @@ export const botScheduler = {
     const changeStream = voiceChannelEvents.watch<
       VoiceChannelEvent,
       ChangeStreamInsertDocument<VoiceChannelEvent>
-    >([{ $match: {} }], {
+    >([{ $match: { operationType: "insert" } }], {
       fullDocument: "updateLookup",
     })
 
     changeStream.on("change", async (change) => {
       try {
-        const channelId = change.fullDocument.channelId
-        const memberId = change.fullDocument.memberId
-        const botUser = discordClient?.user?.id
-        const channel = discordClient.channels.cache.get(channelId)
-        const guild = discordClient.guilds.cache.get(
-          change.fullDocument.guildId
-        )
-        const member = await guild?.members.fetch(memberId)
-        const action = change.fullDocument.action
-
-        if (member && channel?.isVoiceBased() && botUser && guild) {
-          handleEvent(guild, member, action)
-        }
+        await dispatchVoiceChannelEvent(change.fullDocument, discordClient, {
+          isEnabled: (guildId) =>
+            getNumberSetting("enabledOnServer", guildId),
+          mute: serverMuteMember,
+          unmute: serverUnmuteMember,
+          disabled: (guild) =>
+            log(`${guild.name}: Camera requirement not enabled on server.`),
+        })
       } catch (e) {
         lerror(e)
       }
@@ -92,7 +64,7 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
   })
 
   if (
-    !member.voice.channel?.permissionsFor(botGuildMember)?.has("SendMessages")
+    !member.voice.channel?.permissionsFor(botGuildMember)?.has("MuteMembers")
   ) {
     log(`${guild.name}: I don't have permissions in this VC.`)
     await member.edit({ mute: false }).catch((e) => {
@@ -116,7 +88,7 @@ export const serverMuteMember = async (guild: Guild, member: GuildMember) => {
   })
   log(`${guild.name}: Muted ${member.user.username}`)
 }
-const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
+export const serverUnmuteMember = async (guild: Guild, member: GuildMember) => {
   if (!member.voice) return
   await member.edit({ mute: false }).catch((e) => {
     lerror(e)
